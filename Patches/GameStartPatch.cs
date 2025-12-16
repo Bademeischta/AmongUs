@@ -1,29 +1,25 @@
 using HarmonyLib;
-using MyCustomRolesMod.Management;
-using MyCustomRolesMod.Roles;
+using MyCustomRolesMod.Core;
+using MyCustomRolesMod.Networking;
+using MyCustomRolesMod.Networking.Packets;
 using System.Linq;
+using Hazel;
 
 namespace MyCustomRolesMod.Patches
 {
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.Begin))]
     public static class GameStartPatch
     {
-        private static readonly System.Random random = new System.Random();
+        private static readonly System.Random _random = new System.Random();
 
         public static void Postfix()
         {
-            if (!AmongUsClient.Instance.AmHost)
-            {
-                ModPlugin.Logger.LogInfo("Not the host, skipping role assignment.");
-                return;
-            }
+            if (!AmongUsClient.Instance.AmHost) return;
 
-            ModPlugin.Logger.LogInfo("Host is assigning roles...");
+            ModPlugin.Logger.LogInfo("[GameStart] Host is assigning roles...");
             RoleManager.Instance.ClearAllRoles();
 
-            float jesterChance = CustomGameOptions.JesterChance;
-
-            if (random.Next(0, 100) < jesterChance)
+            if (_random.Next(0, 100) < ModPlugin.ModConfig.JesterChance.Value)
             {
                 var crewmates = PlayerControl.AllPlayerControls
                     .ToArray()
@@ -32,13 +28,16 @@ namespace MyCustomRolesMod.Patches
 
                 if (crewmates.Any())
                 {
-                    var jester = crewmates[random.Next(crewmates.Count)];
-                    RoleManager.Instance.SetRole(jester, RoleType.Jester);
-                    NetworkManager.SendRoleAssignment(jester, RoleType.Jester);
-                }
-                else
-                {
-                    ModPlugin.Logger.LogWarning("No potential crewmates found to become Jester.");
+                    var jester = crewmates[_random.Next(crewmates.Count)];
+
+                    var writer = MessageWriter.Get(SendOption.Reliable);
+                    writer.StartMessage((byte)RpcType.SetRole);
+                    writer.Write(jester.PlayerId);
+                    writer.Write((byte)RoleType.Jester);
+                    writer.EndMessage();
+
+                    RpcManager.Instance.Send(writer);
+                    RoleManager.Instance.SetRole(jester, RoleType.Jester); // Set locally after send
                 }
             }
         }

@@ -2,7 +2,10 @@ using BepInEx;
 using BepInEx.IL2CPP;
 using BepInEx.Logging;
 using HarmonyLib;
+using MyCustomRolesMod.Config;
+using MyCustomRolesMod.Networking;
 using System.Reflection;
+using UnityEngine;
 
 namespace MyCustomRolesMod
 {
@@ -10,15 +13,19 @@ namespace MyCustomRolesMod
     public class ModPlugin : BasePlugin
     {
         public static ManualLogSource Logger { get; private set; }
-        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+        public static ModConfig ModConfig { get; private set; }
+        private readonly Harmony _harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
         public override void Load()
         {
             Logger = Log;
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_NAME} is loaded!");
+            ModConfig = new ModConfig(Config);
 
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
-            Logger.LogInfo($"Harmony patches applied for {PluginInfo.PLUGIN_NAME}.");
+            // Register our RpcManager so it can receive Unity's Update events
+            AddComponent<RpcManager>();
+
+            _harmony.PatchAll(Assembly.GetExecutingAssembly());
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} is loaded.");
         }
     }
 
@@ -26,6 +33,6 @@ namespace MyCustomRolesMod
     {
         public const string PLUGIN_GUID = "com.example.mycustomrolesmod.production";
         public const string PLUGIN_NAME = "MyCustomRolesMod (Production)";
-        public const string PLUGIN_VERSION = "2.0.0";
+        public const string PLUGIN_VERSION = "3.0.0";
     }
 }

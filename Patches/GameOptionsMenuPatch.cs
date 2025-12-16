@@ -1,5 +1,6 @@
 using HarmonyLib;
-using MyCustomRolesMod.Management;
+using MyCustomRolesMod.Networking;
+using MyCustomRolesMod.Networking.Packets;
 using UnityEngine;
 using Hazel;
 
@@ -16,7 +17,7 @@ namespace MyCustomRolesMod.Patches
             _jesterChanceOption.gameObject.name = "JesterChanceOption";
 
             _jesterChanceOption.TitleText.text = "Jester Chance";
-            _jesterChanceOption.Value = CustomGameOptions.JesterChance;
+            _jesterChanceOption.Value = ModPlugin.ModConfig.JesterChance.Value;
             _jesterChanceOption.MinValue = 0f;
             _jesterChanceOption.MaxValue = 100f;
             _jesterChanceOption.Increment = 5f;
@@ -24,7 +25,7 @@ namespace MyCustomRolesMod.Patches
 
             _jesterChanceOption.OnValueChanged.AddListener((System.Action<float>)((value) =>
             {
-                CustomGameOptions.JesterChance = value;
+                ModPlugin.ModConfig.JesterChance.Value = value;
                 if (AmongUsClient.Instance.AmHost)
                 {
                     SendOptions();
@@ -36,18 +37,18 @@ namespace MyCustomRolesMod.Patches
         {
             if (_jesterChanceOption != null)
             {
-                _jesterChanceOption.Value = CustomGameOptions.JesterChance;
+                _jesterChanceOption.Value = ModPlugin.ModConfig.JesterChance.Value;
             }
         }
 
         private static void SendOptions()
         {
-            ModPlugin.Logger.LogInfo($"Host sending game options: JesterChance={CustomGameOptions.JesterChance}%");
+            var packet = new OptionsPacket { JesterChance = ModPlugin.ModConfig.JesterChance.Value };
             var writer = MessageWriter.Get(SendOption.Reliable);
-            writer.StartMessage(NetworkManager.GameOptionsSyncRpcId);
-            writer.Write(CustomGameOptions.JesterChance);
+            writer.StartMessage((byte)RpcType.SyncOptions);
+            packet.Serialize(writer);
             writer.EndMessage();
-            AmongUsClient.Instance.SendOrDisconnect(writer);
+            RpcManager.Instance.Send(writer);
         }
     }
 }
