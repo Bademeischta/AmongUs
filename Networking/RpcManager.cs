@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Hazel;
 using MyCustomRolesMod.Networking.Packets;
 using UnityEngine;
@@ -12,9 +11,20 @@ namespace MyCustomRolesMod.Networking
         public static RpcManager Instance => _instance;
 
         private readonly Dictionary<uint, PendingRpc> _pendingRpcs = new Dictionary<uint, PendingRpc>();
+        private readonly List<uint> _toRemove = new List<uint>();
         private uint _nextMessageId = 0;
 
         void Awake() => _instance = this;
+
+        void OnDestroy()
+        {
+            foreach (var rpc in _pendingRpcs.Values)
+            {
+                rpc.Writer.Recycle();
+            }
+            _pendingRpcs.Clear();
+            ModPlugin.Logger.LogInfo("[RPC] Cleaned up all pending RPCs on destroy.");
+        }
 
         void Update()
         {
@@ -25,8 +35,11 @@ namespace MyCustomRolesMod.Networking
         private void HandleTimeouts()
         {
             var now = Time.time;
-            foreach (var rpc in _pendingRpcs.Values.ToList())
+            _toRemove.Clear();
+
+            foreach (var kvp in _pendingRpcs)
             {
+                var rpc = kvp.Value;
                 if (now - rpc.Timestamp > ModPlugin.ModConfig.RpcTimeoutSeconds.Value)
                 {
                     if (rpc.RetryCount < ModPlugin.ModConfig.MaxRpcRetries.Value)
@@ -38,10 +51,18 @@ namespace MyCustomRolesMod.Networking
                     }
                     else
                     {
-                        ModPlugin.Logger.LogError($"[RPC] Message {rpc.MessageId} failed after {ModPlugin.ModConfig.MaxRpcRetries.Value} retries. Giving up.");
-                        _pendingRpcs.Remove(rpc.MessageId);
-                        rpc.Writer.Recycle(); // Recycle on final failure
+                        _toRemove.Add(kvp.Key);
                     }
+                }
+            }
+
+            foreach (var key in _toRemove)
+            {
+                if (_pendingRpcs.TryGetValue(key, out var rpc))
+                {
+                    ModPlugin.Logger.LogError($"[RPC] Message {key} failed after {ModPlugin.ModConfig.MaxRpcRetries.Value} retries. Giving up.");
+                    _pendingRpcs.Remove(key);
+                    rpc.Writer.Recycle();
                 }
             }
         }
@@ -52,7 +73,7 @@ namespace MyCustomRolesMod.Networking
         {
             if (!AmongUsClient.Instance.AmHost)
             {
-                writer.Recycle(); // Recycle if not sent
+                writer.Recycle();
                 return;
             }
 
@@ -63,7 +84,7 @@ namespace MyCustomRolesMod.Networking
             finalWriter.WriteBytesAndSize(writer.Buffer, writer.Length);
             finalWriter.EndMessage();
 
-            writer.Recycle(); // Recycle the original writer immediately after copying
+            writer.Recycle();
 
             _pendingRpcs[messageId] = new PendingRpc { MessageId = messageId, Timestamp = Time.time, Writer = finalWriter, TargetClientId = targetClientId };
             AmongUsClient.Instance.SendOrDisconnect(finalWriter, targetClientId ?? -1);
@@ -74,7 +95,7 @@ namespace MyCustomRolesMod.Networking
             if (_pendingRpcs.TryGetValue(messageId, out var rpc))
             {
                 _pendingRpcs.Remove(messageId);
-                rpc.Writer.Recycle(); // Recycle on successful ACK
+                rpc.Writer.Recycle();
                 if (ModPlugin.ModConfig.IsDebug.Value)
                     ModPlugin.Logger.LogInfo($"[RPC] Received ACK for message {messageId}.");
             }
@@ -88,7 +109,7 @@ namespace MyCustomRolesMod.Networking
             writer.Write(messageId);
             writer.EndMessage();
             AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle(); // Recycle after sending
+            writer.Recycle();
         }
 
         private class PendingRpc

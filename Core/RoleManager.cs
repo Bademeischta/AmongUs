@@ -48,6 +48,8 @@ namespace MyCustomRolesMod.Core
             return role;
         }
 
+        // This method allocates a new dictionary. It's only called for late-joiners,
+        // so the performance impact is negligible and avoids cache invalidation complexity.
         public Dictionary<byte, RoleType> GetAllRoles()
         {
             var roles = new Dictionary<byte, RoleType>();

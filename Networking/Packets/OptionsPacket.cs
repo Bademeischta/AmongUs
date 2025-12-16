@@ -38,8 +38,17 @@ namespace MyCustomRolesMod.Networking.Packets
 
         private uint CalculateChecksum()
         {
-            // Simple checksum for demonstration. A real implementation would use CRC32.
-            return (uint)(JesterChance * 42);
+            uint crc = 0xFFFFFFFF;
+            var bytes = BitConverter.GetBytes(JesterChance);
+            foreach (var b in bytes)
+            {
+                crc ^= b;
+                for (int i = 0; i < 8; i++)
+                {
+                    crc = (crc >> 1) ^ (0xEDB88320 & ~((crc & 1) - 1));
+                }
+            }
+            return ~crc;
         }
     }
 }

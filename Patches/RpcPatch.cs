@@ -4,7 +4,6 @@ using MyCustomRolesMod.Core;
 using MyCustomRolesMod.Networking;
 using MyCustomRolesMod.Networking.Packets;
 using System;
-using System.Linq;
 using static MyCustomRolesMod.ModPlugin;
 
 namespace MyCustomRolesMod.Patches
@@ -15,6 +14,7 @@ namespace MyCustomRolesMod.Patches
         public static void Postfix(InnerNetClient __instance, MessageReader reader)
         {
             var initialPosition = reader.Position;
+            MessageReader payloadReader = null;
             try
             {
                 var rpcType = (RpcType)reader.Tag;
@@ -27,7 +27,7 @@ namespace MyCustomRolesMod.Patches
 
                 var messageId = reader.ReadUInt32();
                 var payload = reader.ReadBytesAndSize();
-                var payloadReader = MessageReader.Get(payload);
+                payloadReader = MessageReader.Get(payload);
 
                 switch (rpcType)
                 {
@@ -52,12 +52,23 @@ namespace MyCustomRolesMod.Patches
                 Logger.LogError($"[RPC Error] Failed to handle message: {e}");
                 reader.Position = initialPosition;
             }
+            finally
+            {
+                payloadReader?.Recycle(); // CRITICAL: Always recycle the payload reader
+            }
         }
 
         private static void HandleSetRole(MessageReader reader)
         {
             var playerId = reader.ReadByte();
             var roleType = (RoleType)reader.ReadByte();
+
+            if (!Enum.IsDefined(typeof(RoleType), roleType))
+            {
+                Logger.LogWarning($"[RPC] Invalid role type {(byte)roleType} received for player {playerId}.");
+                return;
+            }
+
             var player = GameData.Instance.GetPlayerById(playerId)?.Object;
             if (player != null)
             {
