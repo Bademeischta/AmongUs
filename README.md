@@ -1,8 +1,8 @@
-# MyCustomRolesMod für Among Us (v4.0 - Production Grade)
+# MyCustomRolesMod für Among Us (v4.1 - Production Grade)
 
 Dieses Projekt ist ein BepInEx/HarmonyLib-Mod für das Spiel "Among Us", der ein extrem robustes und erweiterbares System für benutzerdefinierte Rollen hinzufügt. Die erste implementierte Rolle ist der **Jester** (Narr).
 
-Diese Version (v4.0+) wurde von Grund auf neu geschrieben, mit einem Fokus auf **maximale Stabilität, Sicherheit und Performance**, um ein produktionsreifes Erlebnis zu gewährleisten.
+Diese Version (v4.1+) wurde von Grund auf neu geschrieben, mit einem Fokus auf **maximale Stabilität, Sicherheit und Performance**, um ein produktionsreifes Erlebnis zu gewährleisten.
 
 ## Features
 
@@ -21,10 +21,9 @@ Diese Version (v4.0+) wurde von Grund auf neu geschrieben, mit einem Fokus auf *
 
 **Wichtiger Hinweis:** Alle Spieler in der Lobby müssen exakt die gleiche Version des Mods installiert haben.
 
-1.  **BepInEx installieren:** Lade die neueste Version von [BepInEx 6 (IL2CPP)](https://github.com/BepInEx/BepInEx/releases) herunter. Entpacke den Inhalt in dein Among Us-Spieleverzeichnis.
-2.  **Mod-DLL herunterladen:** Lade die `MyCustomRolesMod.dll` aus dem [Releases-Bereich](https://github.com/example/mycustomrolesmod/releases) dieses Projekts herunter.
-3.  **Mod platzieren:** Lege die `MyCustomRolesMod.dll` in den Ordner `Among Us/BepInEx/plugins`.
-4.  **Spiel starten:** Starte das Spiel. Der Mod wird automatisch geladen.
+1.  **ZIP-Archiv herunterladen:** Lade die `MyCustomRolesMod-vX.X-Distribution.zip` von der [Release-Seite](https://github.com/example/mycustomrolesmod/releases) des Projekts herunter.
+2.  **In das Spielverzeichnis entpacken:** Entpacke den Inhalt der ZIP-Datei direkt in dein Among Us-Hauptverzeichnis (der Ordner, der die `Among Us.exe` enthält).
+3.  **Spiel starten:** Das war's! Starte das Spiel. Der Mod ist jetzt vollständig installiert.
 
 ## Konfiguration
 
@@ -37,5 +36,5 @@ In dieser Datei können fortgeschrittene Einstellungen wie Netzwerk-Timeouts und
 
 1.  **Repository klonen.**
 2.  **.csproj-Datei anpassen:** Öffne `MyCustomRolesMod.csproj` und passe den `<AmongUsGamePath>` an dein lokales Spielverzeichnis an.
-3.  **Projekt erstellen:** Kompiliere das Projekt in deiner bevorzugten IDE (Visual Studio, Rider).
-4.  **DLL kopieren:** Kopiere die kompilierte `MyCustomRolesMod.dll` aus `bin/Debug` (oder `bin/Release`) in deinen `BepInEx/plugins`-Ordner.
+3.  **Projekt kompilieren:** Baue das Projekt in deiner IDE. Dies erstellt die `MyCustomRolesMod.dll`.
+4.  **Distribution erstellen:** Führe das `build.sh`-Skript aus. Es nimmt die kompilierte DLL und verpackt sie zusammen mit den notwendigen BepInEx-Dateien in ein distributionsfertiges ZIP-Archiv im Hauptverzeichnis.
