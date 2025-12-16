@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>MyCustomRolesMod</AssemblyName>
+        <Product>MyCustomRolesMod</Product>
+        <Version>1.0.0</Version>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>latest</LangVersion>
+        <!-- ADJUST THIS PATH TO YOUR AMONG US GAME DIRECTORY -->
+        <AmongUsGamePath>C:\Program Files (x86)\Steam\steamapps\common\Among Us</AmongUsGamePath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.*" IncludeAssets="compile" />
+        <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Game Assemblies -->
+        <Reference Include="Assembly-CSharp">
+          <HintPath>$(AmongUsGamePath)\Among Us_Data\Managed\Assembly-CSharp.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Il2Cppmscorlib">
+          <HintPath>$(AmongUsGamePath)\Among Us_Data\Managed\Il2Cppmscorlib.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Hazel">
+            <HintPath>$(AmongUsGamePath)\Among Us_Data\Managed\Hazel.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
+        <!-- Unity Assemblies -->
+        <Reference Include="UnityEngine.CoreModule">
+          <HintPath>$(AmongUsGamePath)\Among Us_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+          <HintPath>$(AmongUsGamePath)\Among Us_Data\Managed\UnityEngine.UI.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+         <Reference Include="UnityEngine.TextRenderingModule">
+          <HintPath>$(AmongUsGamePath)\Among Us_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+
+        <!-- BepInEx/Harmony Assemblies -->
+        <Reference Include="0Harmony">
+            <HintPath>$(AmongUsGamePath)\BepInEx\core\0Harmony.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="BepInEx.IL2CPP">
+            <HintPath>$(AmongUsGamePath)\BepInEx\core\BepInEx.IL2CPP.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+</Project>
