@@ -18,7 +18,7 @@ namespace MyCustomRolesMod.Patches
             {
                 if (GameData.Instance?.GameStarted == true)
                 {
-                    ModPlugin.Logger.LogInfo($"[Late Join] Player {__instance.PlayerId} joined mid-game. Syncing roles to them.");
+                    ModPlugin.Logger.LogInfo($"[Late Join] Player {__instance.PlayerId} joined mid-game. Syncing roles.");
 
                     var allRoles = RoleManager.Instance.GetAllRoles();
                     if (allRoles.Count > 0)
@@ -32,14 +32,13 @@ namespace MyCustomRolesMod.Patches
                             writer.Write((byte)role.Value);
                         }
                         writer.EndMessage();
-
                         RpcManager.Instance.SendTo(writer, __instance.OwnerId);
                     }
                 }
             }
             catch (Exception e)
             {
-                ModPlugin.Logger.LogError($"[Late Join] Error during role sync check: {e.Message}");
+                ModPlugin.Logger.LogError($"[Late Join] Error during role sync check: {e}");
             }
         }
     }

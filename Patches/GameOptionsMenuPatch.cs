@@ -13,6 +13,8 @@ namespace MyCustomRolesMod.Patches
 
         public static void Postfix(GameOptionsMenu __instance)
         {
+            if (_jesterChanceOption != null) Object.Destroy(_jesterChanceOption.gameObject);
+
             _jesterChanceOption = Object.Instantiate(__instance.GetComponentsInChildren<NumberOption>()[0], __instance.transform);
             _jesterChanceOption.gameObject.name = "JesterChanceOption";
 
@@ -28,7 +30,12 @@ namespace MyCustomRolesMod.Patches
                 ModPlugin.ModConfig.JesterChance.Value = value;
                 if (AmongUsClient.Instance.AmHost)
                 {
-                    SendOptions();
+                    var packet = new OptionsPacket { JesterChance = value };
+                    var writer = MessageWriter.Get(SendOption.Reliable);
+                    writer.StartMessage((byte)RpcType.SyncOptions);
+                    packet.Serialize(writer);
+                    writer.EndMessage();
+                    RpcManager.Instance.Send(writer);
                 }
             }));
         }
@@ -39,16 +46,6 @@ namespace MyCustomRolesMod.Patches
             {
                 _jesterChanceOption.Value = ModPlugin.ModConfig.JesterChance.Value;
             }
-        }
-
-        private static void SendOptions()
-        {
-            var packet = new OptionsPacket { JesterChance = ModPlugin.ModConfig.JesterChance.Value };
-            var writer = MessageWriter.Get(SendOption.Reliable);
-            writer.StartMessage((byte)RpcType.SyncOptions);
-            packet.Serialize(writer);
-            writer.EndMessage();
-            RpcManager.Instance.Send(writer);
         }
     }
 }

@@ -16,7 +16,6 @@ namespace MyCustomRolesMod.Patches
         {
             if (!AmongUsClient.Instance.AmHost) return;
 
-            ModPlugin.Logger.LogInfo("[GameStart] Host is assigning roles...");
             RoleManager.Instance.ClearAllRoles();
 
             if (_random.Next(0, 100) < ModPlugin.ModConfig.JesterChance.Value)
@@ -30,6 +29,9 @@ namespace MyCustomRolesMod.Patches
                 {
                     var jester = crewmates[_random.Next(crewmates.Count)];
 
+                    // CRITICAL: Set state LOCALLY first.
+                    RoleManager.Instance.SetRole(jester, RoleType.Jester);
+
                     var writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage((byte)RpcType.SetRole);
                     writer.Write(jester.PlayerId);
@@ -37,7 +39,6 @@ namespace MyCustomRolesMod.Patches
                     writer.EndMessage();
 
                     RpcManager.Instance.Send(writer);
-                    RoleManager.Instance.SetRole(jester, RoleType.Jester); // Set locally after send
                 }
             }
         }

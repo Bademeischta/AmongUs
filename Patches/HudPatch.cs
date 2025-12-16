@@ -14,18 +14,13 @@ namespace MyCustomRolesMod.Patches
         {
             public static void Postfix(HudManager __instance)
             {
-                CleanupRoleText(); // Clean up potential duplicates
+                if (_roleText != null) Object.Destroy(_roleText.gameObject);
 
                 var roleTextGo = new GameObject("CustomRoleText");
                 roleTextGo.transform.SetParent(__instance.transform);
 
                 int uiLayer = LayerMask.NameToLayer("UI");
-                if (uiLayer == -1)
-                {
-                    ModPlugin.Logger.LogWarning("UI layer not found, using layer 5 as fallback.");
-                    uiLayer = 5;
-                }
-                roleTextGo.layer = uiLayer;
+                roleTextGo.layer = (uiLayer == -1) ? 5 : uiLayer;
 
                 _roleText = roleTextGo.AddComponent<TextMeshPro>();
                 _roleText.font = __instance.TaskText.font;
@@ -43,7 +38,11 @@ namespace MyCustomRolesMod.Patches
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.OnDestroy))]
         public static class HudManagerOnDestroyPatch
         {
-            public static void Postfix() => CleanupRoleText();
+            public static void Postfix()
+            {
+                if (_roleText != null) Object.Destroy(_roleText.gameObject);
+                _roleText = null;
+            }
         }
 
         [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
@@ -63,18 +62,8 @@ namespace MyCustomRolesMod.Patches
                 else
                 {
                     __instance.nameText.color = Color.white;
-                    if (_roleText != null)
-                        _roleText.text = "";
+                    if (_roleText != null) _roleText.text = "";
                 }
-            }
-        }
-
-        private static void CleanupRoleText()
-        {
-            if (_roleText != null)
-            {
-                Object.Destroy(_roleText.gameObject);
-                _roleText = null;
             }
         }
     }

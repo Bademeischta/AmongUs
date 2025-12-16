@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MyCustomRolesMod.Core
 {
@@ -8,18 +8,11 @@ namespace MyCustomRolesMod.Core
         private static RoleManager _instance;
         public static RoleManager Instance => _instance ??= new RoleManager();
 
-        private readonly ConcurrentDictionary<byte, BaseRole> _playerRoles = new ConcurrentDictionary<byte, BaseRole>();
-
+        private readonly Dictionary<byte, BaseRole> _playerRoles = new Dictionary<byte, BaseRole>();
         private byte _jesterWinnerId = byte.MaxValue;
-        private readonly object _winnerLock = new object();
 
-        public bool HasJesterWinner
-        {
-            get
-            {
-                lock (_winnerLock) { return _jesterWinnerId != byte.MaxValue; }
-            }
-        }
+        // A single lock object to ensure atomicity across all state modifications.
+        private readonly object _stateLock = new object();
 
         private RoleManager() { }
 
@@ -27,60 +20,66 @@ namespace MyCustomRolesMod.Core
         {
             if (player == null) return;
 
-            _playerRoles.TryRemove(player.PlayerId, out _);
-
-            BaseRole newRole = roleType switch
+            lock (_stateLock)
             {
-                RoleType.Jester => new JesterRole(player),
-                _ => null
-            };
+                _playerRoles.Remove(player.PlayerId);
 
-            if (newRole != null)
-            {
-                _playerRoles[player.PlayerId] = newRole;
-                ModPlugin.Logger.LogInfo($"[RoleManager] Assigned {roleType} to player {player.PlayerId}.");
+                BaseRole newRole = roleType switch
+                {
+                    RoleType.Jester => new JesterRole(player),
+                    _ => null
+                };
+
+                if (newRole != null)
+                {
+                    _playerRoles[player.PlayerId] = newRole;
+                }
             }
         }
 
         public BaseRole GetRole(byte playerId)
         {
-            _playerRoles.TryGetValue(playerId, out var role);
-            return role;
+            lock (_stateLock)
+            {
+                _playerRoles.TryGetValue(playerId, out var role);
+                return role;
+            }
         }
 
-        // This method allocates a new dictionary. It's only called for late-joiners,
-        // so the performance impact is negligible and avoids cache invalidation complexity.
         public Dictionary<byte, RoleType> GetAllRoles()
         {
-            var roles = new Dictionary<byte, RoleType>();
-            foreach (var pair in _playerRoles)
+            lock (_stateLock)
             {
-                roles[pair.Key] = pair.Value.RoleType;
+                // The dictionary is copied here, ensuring the returned object is safe
+                // from modifications to the original collection.
+                return _playerRoles.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.RoleType);
             }
-            return roles;
         }
 
         public void ClearAllRoles()
         {
-            _playerRoles.Clear();
-            lock (_winnerLock)
+            lock (_stateLock)
             {
+                _playerRoles.Clear();
                 _jesterWinnerId = byte.MaxValue;
             }
-            ModPlugin.Logger.LogInfo("[RoleManager] All custom roles cleared.");
         }
 
         public void SetJesterWinner(byte playerId)
         {
-            lock (_winnerLock)
+            lock (_stateLock)
             {
-                if (_jesterWinnerId != byte.MaxValue)
-                {
-                    ModPlugin.Logger.LogWarning($"[RoleManager] Jester winner already set to {_jesterWinnerId}. Ignoring new winner {playerId}.");
-                    return;
-                }
+                if (_jesterWinnerId != byte.MaxValue) return; // Prevent winner from being changed.
                 _jesterWinnerId = playerId;
-                ModPlugin.Logger.LogInfo($"[RoleManager] Jester winner set: {playerId}");
+            }
+        }
+
+        public bool HasJesterWinner(out byte winnerId)
+        {
+            lock (_stateLock)
+            {
+                winnerId = _jesterWinnerId;
+                return _jesterWinnerId != byte.MaxValue;
             }
         }
     }
