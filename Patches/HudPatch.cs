@@ -1,5 +1,5 @@
 using HarmonyLib;
-using MyCustomRolesMod.Management;
+using MyCustomRolesMod.Core;
 using TMPro;
 using UnityEngine;
 
@@ -14,19 +14,24 @@ namespace MyCustomRolesMod.Patches
         {
             public static void Postfix(HudManager __instance)
             {
-                // Clean up any potential lingering UI elements from previous sessions.
-                CleanupRoleText();
+                CleanupRoleText(); // Clean up potential duplicates
 
                 var roleTextGo = new GameObject("CustomRoleText");
                 roleTextGo.transform.SetParent(__instance.transform);
-                roleTextGo.layer = LayerMask.NameToLayer("UI");
+
+                int uiLayer = LayerMask.NameToLayer("UI");
+                if (uiLayer == -1)
+                {
+                    ModPlugin.Logger.LogWarning("UI layer not found, using layer 5 as fallback.");
+                    uiLayer = 5;
+                }
+                roleTextGo.layer = uiLayer;
 
                 _roleText = roleTextGo.AddComponent<TextMeshPro>();
                 _roleText.font = __instance.TaskText.font;
                 _roleText.fontSize = 2.0f;
                 _roleText.alignment = TextAlignmentOptions.TopLeft;
 
-                // Position it near the task text
                 var rectTransform = _roleText.rectTransform;
                 rectTransform.anchorMin = new Vector2(0, 1);
                 rectTransform.anchorMax = new Vector2(0, 1);
@@ -38,10 +43,7 @@ namespace MyCustomRolesMod.Patches
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.OnDestroy))]
         public static class HudManagerOnDestroyPatch
         {
-            public static void Postfix()
-            {
-                CleanupRoleText();
-            }
+            public static void Postfix() => CleanupRoleText();
         }
 
         [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
@@ -56,17 +58,13 @@ namespace MyCustomRolesMod.Patches
                 {
                     __instance.nameText.color = role.Color;
                     if (_roleText != null)
-                    {
                         _roleText.text = $"Rolle: <color=#{ColorUtility.ToHtmlStringRGB(role.Color)}>{role.Name}</color>";
-                    }
                 }
                 else
                 {
                     __instance.nameText.color = Color.white;
                     if (_roleText != null)
-                    {
                         _roleText.text = "";
-                    }
                 }
             }
         }
@@ -77,7 +75,6 @@ namespace MyCustomRolesMod.Patches
             {
                 Object.Destroy(_roleText.gameObject);
                 _roleText = null;
-                ModPlugin.Logger.LogInfo("Cleaned up custom role UI text.");
             }
         }
     }
