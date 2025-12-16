@@ -26,6 +26,8 @@ namespace MyCustomRolesMod.Management
             BaseRole newRole = roleType switch
             {
                 RoleType.Jester => new JesterRole(player),
+                RoleType.Echo => new EchoRole(player),
+                RoleType.Puppeteer => new PuppeteerRole(player),
                 _ => null
             };
 
@@ -42,6 +44,11 @@ namespace MyCustomRolesMod.Management
         {
             _playerRoles.TryGetValue(playerId, out var role);
             return role;
+        }
+
+        public IEnumerable<BaseRole> GetAllRoles()
+        {
+            return _playerRoles.Values;
         }
 
         public void ClearRole(byte playerId)

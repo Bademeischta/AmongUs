@@ -8,6 +8,7 @@ namespace MyCustomRolesMod.Roles
         public abstract string Name { get; }
         public abstract Color Color { get; }
         public abstract RoleType RoleType { get; }
+        public abstract TeamType Team { get; }
 
         protected BaseRole(PlayerControl player)
         {
@@ -21,6 +22,15 @@ namespace MyCustomRolesMod.Roles
     public enum RoleType : byte
     {
         None,
-        Jester
+        Jester,
+        Echo,
+        Puppeteer
+    }
+
+    public enum TeamType
+    {
+        Crewmate,
+        Impostor,
+        Neutral
     }
 }
