@@ -4,11 +4,10 @@ namespace MyCustomRolesMod.Roles
 {
     public abstract class BaseRole
     {
+        public PlayerControl Player { get; }
         public abstract string Name { get; }
         public abstract Color Color { get; }
-        public abstract string Description { get; }
-
-        public PlayerControl Player { get; }
+        public abstract RoleType RoleType { get; }
 
         protected BaseRole(PlayerControl player)
         {
@@ -17,6 +16,11 @@ namespace MyCustomRolesMod.Roles
 
         public virtual void OnRoleAssign() { }
         public virtual void OnRoleClear() { }
-        public virtual void Update() { }
+    }
+
+    public enum RoleType : byte
+    {
+        None,
+        Jester
     }
 }

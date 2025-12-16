@@ -1,5 +1,6 @@
 using HarmonyLib;
 using MyCustomRolesMod.Management;
+using MyCustomRolesMod.Roles;
 using UnityEngine;
 
 namespace MyCustomRolesMod.Patches
@@ -9,24 +10,23 @@ namespace MyCustomRolesMod.Patches
     {
         public static bool Prefix(ExileController __instance)
         {
-            var exiledPlayer = __instance.exiled;
-            if (exiledPlayer == null || exiledPlayer.Object == null) return true;
+            var exiledPlayer = __instance.exiled?.Object;
+            if (exiledPlayer == null) return true;
 
-            PlayerControl exiledPlayerControl = exiledPlayer.Object;
-            if (RoleManager.GetRole(exiledPlayerControl) is JesterRole)
+            if (RoleManager.Instance.GetRole(exiledPlayer.PlayerId) is JesterRole)
             {
-                // Mark the jester as the winner
-                RoleManager.JesterWinnerId = exiledPlayerControl.PlayerId;
+                ModPlugin.Logger.LogInfo($"Jester {exiledPlayer.PlayerId} was exiled. Triggering Jester win.");
+                RoleManager.Instance.JesterWinnerId = exiledPlayer.PlayerId;
 
-                // Trigger a standard Impostor win. Our other patch will catch this.
+                // Hijack the impostor win flow. The EndGameScreen patch will modify the text.
                 ShipStatus.Instance.RpcEndGame(EndGameReason.ImpostorByVote, false);
 
-                // Prevent the original exile animation from playing
+                // Prevent original exile animation
                 __instance.gameObject.SetActive(false);
                 return false;
             }
 
-            return true; // Proceed with the original method
+            return true;
         }
     }
 
@@ -35,12 +35,9 @@ namespace MyCustomRolesMod.Patches
     {
         public static void Prefix(EndGameScreen __instance, ref string victoryText)
         {
-            if (RoleManager.JesterWinnerId != byte.MaxValue)
+            if (RoleManager.Instance.JesterWinnerId != byte.MaxValue)
             {
-                // A Jester has won, so we change the victory text.
                 victoryText = "Jester Wins";
-
-                // Also, let's change the colors to pink
                 __instance.WinText.color = Color.magenta;
                 __instance.BackgroundBar.color = Color.magenta;
             }
