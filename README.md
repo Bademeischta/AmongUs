@@ -1,34 +1,41 @@
-# MyCustomRolesMod für Among Us
+# MyCustomRolesMod für Among Us (v4.0 - Production Grade)
 
-Dieses Projekt ist ein BepInEx/HarmonyLib-Mod für das Spiel "Among Us", der ein erweiterbares System für benutzerdefinierte Rollen hinzufügt. Die erste implementierte Rolle ist der **Jester** (Narr).
+Dieses Projekt ist ein BepInEx/HarmonyLib-Mod für das Spiel "Among Us", der ein extrem robustes und erweiterbares System für benutzerdefinierte Rollen hinzufügt. Die erste implementierte Rolle ist der **Jester** (Narr).
+
+Diese Version (v4.0+) wurde von Grund auf neu geschrieben, mit einem Fokus auf **maximale Stabilität, Sicherheit und Performance**, um ein produktionsreifes Erlebnis zu gewährleisten.
 
 ## Features
 
-- **Erweiterbares Rollen-System:** Die Architektur (`RoleManager`, `BaseRole`) ermöglicht es Entwicklern, einfach neue Rollen hinzuzufügen.
+- **Erweiterbares Rollen-System:** Die Architektur ist sauber, thread-sicher und für die einfache Integration neuer Rollen ausgelegt.
 - **Neue Rolle: Jester:**
     - **Ziel:** Lass dich von den anderen Spielern aus dem Spiel wählen (exiled).
     - **Gewinnbedingung:** Wenn der Jester während eines Meetings rausgewählt wird, gewinnt er sofort das Spiel.
-- **Benutzerdefinierte Spieleinstellungen:** In der Lobby kann der Host die Wahrscheinlichkeit (0-100%) einstellen, mit der ein Jester im Spiel erscheint. Diese Einstellung wird mit allen Spielern synchronisiert.
-- **Netzwerk-Synchronisation:** Rollen und Einstellungen werden zuverlässig über benutzerdefinierte RPC-Nachrichten an alle Clients gesendet.
+- **Robustes Netzwerkprotokoll:**
+    - **ACK & Retry-System:** Garantiert die Zustellung wichtiger Nachrichten auch bei schlechter Netzwerkverbindung.
+    - **Late-Join-Support:** Spieler, die einem laufenden Spiel beitreten, werden vollständig synchronisiert.
+    - **Versions-Validierung:** Stellt sicher, dass nur Spieler mit der gleichen Mod-Version zusammen spielen können.
+- **Benutzerdefinierte Spieleinstellungen:** In der Lobby kann der Host die Wahrscheinlichkeit für einen Jester einstellen. Diese wird sicher an alle Clients synchronisiert.
 - **UI-Integration:** Spieler mit der Jester-Rolle sehen ihren Namen in Pink und erhalten eine klare Anzeige ihrer Rolle auf dem HUD.
 
 ## Installation (für Spieler)
 
-**Wichtiger Hinweis:** Alle Spieler in der Lobby müssen den Mod installiert haben, damit er korrekt funktioniert.
+**Wichtiger Hinweis:** Alle Spieler in der Lobby müssen exakt die gleiche Version des Mods installiert haben.
 
-1.  **BepInEx installieren:** Lade die neueste Version von [BepInEx 6 (IL2CPP)](https://github.com/BepInEx/BepInEx/releases) herunter. Entpacke den Inhalt in dein Among Us-Spieleverzeichnis (dort, wo sich die `Among Us.exe` befindet).
-2.  **Mod-DLL herunterladen:** Lade die `MyCustomRolesMod.dll` aus dem [Releases-Bereich](https.github.com.example.mycustomrolesmod/releases) dieses Projekts herunter.
-3.  **Mod platzieren:** Lege die `MyCustomRolesMod.dll` in den folgenden Ordner in deinem Spielverzeichnis: `Among Us/BepInEx/plugins`.
-4.  **Spiel starten:** Starte das Spiel. Wenn alles korrekt installiert ist, sollte der Mod automatisch geladen werden.
+1.  **BepInEx installieren:** Lade die neueste Version von [BepInEx 6 (IL2CPP)](https://github.com/BepInEx/BepInEx/releases) herunter. Entpacke den Inhalt in dein Among Us-Spieleverzeichnis.
+2.  **Mod-DLL herunterladen:** Lade die `MyCustomRolesMod.dll` aus dem [Releases-Bereich](https://github.com/example/mycustomrolesmod/releases) dieses Projekts herunter.
+3.  **Mod platzieren:** Lege die `MyCustomRolesMod.dll` in den Ordner `Among Us/BepInEx/plugins`.
+4.  **Spiel starten:** Starte das Spiel. Der Mod wird automatisch geladen.
+
+## Konfiguration
+
+Nach dem ersten Start des Spiels mit dem Mod wird eine Konfigurationsdatei erstellt unter:
+`Among Us/BepInEx/config/com.example.mycustomrolesmod.paranoid.cfg`
+
+In dieser Datei können fortgeschrittene Einstellungen wie Netzwerk-Timeouts und Debug-Logging angepasst werden.
 
 ## Build-Anleitung (für Entwickler)
 
-1.  **Repository klonen:** Klone dieses Repository auf deinen lokalen Rechner.
-2.  **.csproj-Datei anpassen:** Öffne die `MyCustomRolesMod.csproj`-Datei in einem Texteditor.
-3.  **Spielpfad festlegen:** Finde die Zeile `<AmongUsGamePath>...</AmongUsGamePath>` und ersetze den Platzhalterpfad mit dem Pfad zu deinem lokalen Among Us-Verzeichnis.
-4.  **Abhängigkeiten wiederherstellen:** Öffne das Projekt in einer IDE wie Visual Studio oder JetBrains Rider und stelle die NuGet-Pakete wieder her.
-5.  **Projekt erstellen:** Kompiliere das Projekt. Die fertige `MyCustomRolesMod.dll` wird im `bin/Debug` oder `bin/Release`-Ordner deines Projektverzeichnisses erstellt.
-6.  **DLL kopieren:** Kopiere die kompilierte DLL-Datei in den `BepInEx/plugins`-Ordner deiner Among Us-Installation, um sie zu testen.
-
----
-*Dieser Mod wurde zu Demonstrations- und Lernzwecken erstellt.*
+1.  **Repository klonen.**
+2.  **.csproj-Datei anpassen:** Öffne `MyCustomRolesMod.csproj` und passe den `<AmongUsGamePath>` an dein lokales Spielverzeichnis an.
+3.  **Projekt erstellen:** Kompiliere das Projekt in deiner bevorzugten IDE (Visual Studio, Rider).
+4.  **DLL kopieren:** Kopiere die kompilierte `MyCustomRolesMod.dll` aus `bin/Debug` (oder `bin/Release`) in deinen `BepInEx/plugins`-Ordner.
