@@ -2,34 +2,32 @@ using System.Collections.Generic;
 using Hazel;
 using MyCustomRolesMod.Networking.Packets;
 using UnityEngine;
+using MyCustomRolesMod.Core;
+using System;
+using MyCustomRolesMod.Patches;
 
 namespace MyCustomRolesMod.Networking
 {
     public class RpcManager : MonoBehaviour
     {
-        private static RpcManager _instance;
-        public static RpcManager Instance => _instance;
+        public static RpcManager Instance { get; private set; }
 
         private readonly Dictionary<uint, PendingRpc> _pendingRpcs = new Dictionary<uint, PendingRpc>();
         private readonly List<uint> _toRemove = new List<uint>();
         private uint _nextMessageId = 0;
+        private readonly Queue<uint> _receivedMessageIds = new Queue<uint>();
 
-        void Awake() => _instance = this;
+        void Awake() => Instance = this;
 
         void OnDestroy()
         {
-            foreach (var rpc in _pendingRpcs.Values)
-            {
-                rpc.Writer.Recycle();
-            }
+            foreach (var rpc in _pendingRpcs.Values) rpc.Writer.Recycle();
             _pendingRpcs.Clear();
-            ModPlugin.Logger.LogInfo("[RPC] Cleaned up all pending RPCs on destroy.");
         }
 
         void Update()
         {
-            if (!AmongUsClient.Instance.AmHost) return;
-            HandleTimeouts();
+            if (AmongUsClient.Instance.AmHost) HandleTimeouts();
         }
 
         private void HandleTimeouts()
@@ -40,13 +38,13 @@ namespace MyCustomRolesMod.Networking
             foreach (var kvp in _pendingRpcs)
             {
                 var rpc = kvp.Value;
-                if (now - rpc.Timestamp > ModPlugin.ModConfig.RpcTimeoutSeconds.Value)
+                if (now > rpc.NextSendAttemptTime)
                 {
                     if (rpc.RetryCount < ModPlugin.ModConfig.MaxRpcRetries.Value)
                     {
                         rpc.RetryCount++;
-                        rpc.Timestamp = now;
-                        ModPlugin.Logger.LogWarning($"[RPC] Message {rpc.MessageId} to client {rpc.TargetClientId} timed out. Retrying ({rpc.RetryCount}/{ModPlugin.ModConfig.MaxRpcRetries.Value})...");
+                        rpc.NextSendAttemptTime = now + Mathf.Pow(2, rpc.RetryCount);
+                        ModPlugin.Logger.LogWarning($"[RPC] Retrying message {rpc.MessageId}...");
                         AmongUsClient.Instance.SendOrDisconnect(rpc.Writer, rpc.TargetClientId ?? -1);
                     }
                     else
@@ -60,7 +58,6 @@ namespace MyCustomRolesMod.Networking
             {
                 if (_pendingRpcs.TryGetValue(key, out var rpc))
                 {
-                    ModPlugin.Logger.LogError($"[RPC] Message {key} failed after {ModPlugin.ModConfig.MaxRpcRetries.Value} retries. Giving up.");
                     _pendingRpcs.Remove(key);
                     rpc.Writer.Recycle();
                 }
@@ -86,24 +83,52 @@ namespace MyCustomRolesMod.Networking
 
             writer.Recycle();
 
-            _pendingRpcs[messageId] = new PendingRpc { MessageId = messageId, Timestamp = Time.time, Writer = finalWriter, TargetClientId = targetClientId };
+            _pendingRpcs[messageId] = new PendingRpc { MessageId = messageId, Timestamp = Time.time, NextSendAttemptTime = Time.time + ModPlugin.ModConfig.RpcTimeoutSeconds.Value, Writer = finalWriter, TargetClientId = targetClientId };
             AmongUsClient.Instance.SendOrDisconnect(finalWriter, targetClientId ?? -1);
         }
 
-        public void HandleAck(uint messageId)
+        public void HandleMessage(RpcType rpcType, MessageReader reader, int senderId)
+        {
+            MessageReader payloadReader = null;
+            try
+            {
+                if (rpcType == RpcType.Acknowledge) { HandleAck(reader.ReadUInt32()); return; }
+                if (rpcType == RpcType.VersionCheck) { HandleVersionCheck(reader); return; }
+                if (rpcType == RpcType.VersionResponse) { HandleVersionResponse(reader, senderId); return; }
+
+                var messageId = reader.ReadUInt32();
+                if (!AmongUsClient.Instance.AmHost && HasBeenReceived(messageId)) { SendAck(messageId); return; }
+
+                var payload = reader.ReadBytesAndSize();
+                payloadReader = MessageReader.Get(payload);
+
+                switch (rpcType)
+                {
+                    case RpcType.SetRole: HandleSetRole(payloadReader); break;
+                    case RpcType.SyncAllRoles: HandleSyncAllRoles(payloadReader); break;
+                    case RpcType.SyncOptions: HandleSyncOptions(payloadReader); break;
+                    default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
+                }
+
+                if (!AmongUsClient.Instance.AmHost) SendAck(messageId);
+            }
+            finally
+            {
+                payloadReader?.Recycle();
+            }
+        }
+
+        private void HandleAck(uint messageId)
         {
             if (_pendingRpcs.TryGetValue(messageId, out var rpc))
             {
                 _pendingRpcs.Remove(messageId);
                 rpc.Writer.Recycle();
-                if (ModPlugin.ModConfig.IsDebug.Value)
-                    ModPlugin.Logger.LogInfo($"[RPC] Received ACK for message {messageId}.");
             }
         }
 
-        public static void SendAck(uint messageId)
+        private void SendAck(uint messageId)
         {
-            if (AmongUsClient.Instance.AmHost) return;
             var writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage((byte)RpcType.Acknowledge);
             writer.Write(messageId);
@@ -112,10 +137,75 @@ namespace MyCustomRolesMod.Networking
             writer.Recycle();
         }
 
+        private bool HasBeenReceived(uint messageId)
+        {
+            if (_receivedMessageIds.Contains(messageId)) return true;
+            _receivedMessageIds.Enqueue(messageId);
+            if (_receivedMessageIds.Count > 100) _receivedMessageIds.Dequeue();
+            return false;
+        }
+
+        private void HandleVersionCheck(MessageReader reader)
+        {
+            byte hostVersion = reader.ReadByte();
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.VersionResponse);
+            writer.Write(HandshakeManager.ProtocolVersion);
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+            writer.Recycle();
+        }
+
+        private void HandleVersionResponse(MessageReader reader, int senderId)
+        {
+            byte clientVersion = reader.ReadByte();
+            if (clientVersion != HandshakeManager.ProtocolVersion)
+            {
+                var writer = MessageWriter.Get(SendOption.Reliable);
+                writer.StartMessage((byte)RpcType.Disconnect);
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer, senderId);
+                writer.Recycle();
+            }
+            else
+            {
+                 HandshakeManager.UnverifiedClients.Remove(senderId);
+            }
+        }
+
+        private void HandleSetRole(MessageReader reader)
+        {
+            var playerId = reader.ReadByte();
+            var roleType = (RoleType)reader.ReadByte();
+            if (!Enum.IsDefined(typeof(RoleType), roleType)) return;
+            var player = GameData.Instance.GetPlayerById(playerId)?.Object;
+            if (player != null) RoleManager.Instance.SetRole(player, roleType);
+        }
+
+        private void HandleSyncAllRoles(MessageReader reader)
+        {
+            var count = reader.ReadUInt16();
+            for (int i = 0; i < count; i++)
+            {
+                var playerId = reader.ReadByte();
+                var roleType = (RoleType)reader.ReadByte();
+                if (!Enum.IsDefined(typeof(RoleType), roleType)) continue;
+                var player = GameData.Instance.GetPlayerById(playerId)?.Object;
+                if (player != null) RoleManager.Instance.SetRole(player, roleType);
+            }
+        }
+
+        private void HandleSyncOptions(MessageReader reader)
+        {
+            var packet = OptionsPacket.Deserialize(reader);
+            ModPlugin.ModConfig.JesterChance.Value = packet.JesterChance;
+        }
+
         private class PendingRpc
         {
             public uint MessageId;
             public float Timestamp;
+            public float NextSendAttemptTime;
             public int RetryCount;
             public MessageWriter Writer;
             public int? TargetClientId;

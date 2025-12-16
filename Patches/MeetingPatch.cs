@@ -17,9 +17,6 @@ namespace MyCustomRolesMod.Patches
                 RoleManager.Instance.SetJesterWinner(exiledPlayer.PlayerId);
 
                 // HACK: We hijack ImpostorByVote because Among Us doesn't support custom win reasons.
-                // This will show as an Impostor win in vanilla stats/achievements.
-                // Our SetVictoryText patch corrects the display text.
-                // WARNING: May conflict with other mods that also hijack this reason!
                 ShipStatus.Instance.RpcEndGame(EndGameReason.ImpostorByVote, false);
 
                 __instance.gameObject.SetActive(false);
@@ -34,7 +31,7 @@ namespace MyCustomRolesMod.Patches
     {
         public static void Prefix(EndGameScreen __instance, ref string victoryText)
         {
-            if (RoleManager.Instance.HasJesterWinner)
+            if (RoleManager.Instance.HasJesterWinner(out _))
             {
                 victoryText = "Jester Wins";
                 __instance.WinText.color = Color.magenta;

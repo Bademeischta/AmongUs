@@ -21,18 +21,18 @@ namespace MyCustomRolesMod
             Logger = Log;
             ModConfig = new ModConfig(Config);
 
-            // Register our RpcManager so it can receive Unity's Update events
+            // Register RpcManager to receive Unity's Update events.
             AddComponent<RpcManager>();
 
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} is loaded.");
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} loaded.");
         }
     }
 
     public static class PluginInfo
     {
-        public const string PLUGIN_GUID = "com.example.mycustomrolesmod.production";
-        public const string PLUGIN_NAME = "MyCustomRolesMod (Production)";
-        public const string PLUGIN_VERSION = "3.0.0";
+        public const string PLUGIN_GUID = "com.example.mycustomrolesmod.paranoid";
+        public const string PLUGIN_NAME = "MyCustomRolesMod (Paranoid Edition)";
+        public const string PLUGIN_VERSION = "4.0.0";
     }
 }

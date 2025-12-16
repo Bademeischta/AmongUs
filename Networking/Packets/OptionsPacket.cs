@@ -5,8 +5,6 @@ namespace MyCustomRolesMod.Networking.Packets
 {
     public class OptionsPacket : BasePacket
     {
-        public override RpcType RpcType => RpcType.SyncOptions;
-
         private const byte ProtocolVersion = 1;
         private const uint MagicBytes = 0xDEADBEEF;
 
@@ -25,13 +23,8 @@ namespace MyCustomRolesMod.Networking.Packets
             if (reader.ReadUInt32() != MagicBytes) throw new Exception("Invalid magic bytes");
             if (reader.ReadByte() > ProtocolVersion) throw new Exception("Unsupported protocol version");
 
-            var packet = new OptionsPacket
-            {
-                JesterChance = reader.ReadSingle()
-            };
-
-            var checksum = reader.ReadUInt32();
-            if (checksum != packet.CalculateChecksum()) throw new Exception("Checksum mismatch");
+            var packet = new OptionsPacket { JesterChance = reader.ReadSingle() };
+            if (reader.ReadUInt32() != packet.CalculateChecksum()) throw new Exception("Checksum mismatch");
 
             return packet;
         }
