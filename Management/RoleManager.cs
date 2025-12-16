@@ -1,30 +1,28 @@
+using System;
 using System.Collections.Generic;
 using MyCustomRolesMod.Roles;
 
 namespace MyCustomRolesMod.Management
 {
-    public enum RoleType : byte
+    public class RoleManager
     {
-        None,
-        Jester
-    }
+        private static RoleManager _instance;
+        public static RoleManager Instance => _instance ??= new RoleManager();
 
-    public static class RoleManager
-    {
-        private static readonly Dictionary<byte, BaseRole> PlayerRoles = new Dictionary<byte, BaseRole>();
-        public static byte JesterWinnerId { get; set; } = byte.MaxValue;
+        private readonly Dictionary<byte, BaseRole> _playerRoles = new Dictionary<byte, BaseRole>();
 
-        public static void SetRole(PlayerControl player, RoleType roleType)
+        public event Action<PlayerControl, RoleType> OnRoleAssigned;
+
+        public byte JesterWinnerId { get; set; } = byte.MaxValue;
+
+        private RoleManager() { }
+
+        public void SetRole(PlayerControl player, RoleType roleType)
         {
             if (player == null) return;
 
-            // Remove existing role if any
-            if (PlayerRoles.ContainsKey(player.PlayerId))
-            {
-                PlayerRoles.Remove(player.PlayerId);
-            }
+            ClearRole(player.PlayerId);
 
-            // Assign new role
             BaseRole newRole = roleType switch
             {
                 RoleType.Jester => new JesterRole(player),
@@ -33,26 +31,37 @@ namespace MyCustomRolesMod.Management
 
             if (newRole != null)
             {
-                PlayerRoles.Add(player.PlayerId, newRole);
+                _playerRoles[player.PlayerId] = newRole;
                 newRole.OnRoleAssign();
+                OnRoleAssigned?.Invoke(player, roleType);
+                ModPlugin.Logger.LogInfo($"Assigned {roleType} to player {player.PlayerId}.");
             }
         }
 
-        public static BaseRole GetRole(PlayerControl player)
+        public BaseRole GetRole(byte playerId)
         {
-            if (player == null) return null;
-            PlayerRoles.TryGetValue(player.PlayerId, out var role);
+            _playerRoles.TryGetValue(playerId, out var role);
             return role;
         }
 
-        public static void ClearRoles()
+        public void ClearRole(byte playerId)
         {
-            foreach (var role in PlayerRoles.Values)
+            if (_playerRoles.TryGetValue(playerId, out var oldRole))
+            {
+                oldRole.OnRoleClear();
+                _playerRoles.Remove(playerId);
+            }
+        }
+
+        public void ClearAllRoles()
+        {
+            foreach (var role in _playerRoles.Values)
             {
                 role.OnRoleClear();
             }
-            PlayerRoles.Clear();
+            _playerRoles.Clear();
             JesterWinnerId = byte.MaxValue;
+            ModPlugin.Logger.LogInfo("All custom roles cleared.");
         }
     }
 }

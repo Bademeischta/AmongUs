@@ -1,38 +1,44 @@
 using HarmonyLib;
 using MyCustomRolesMod.Management;
+using MyCustomRolesMod.Roles;
+using System.Linq;
 
 namespace MyCustomRolesMod.Patches
 {
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.Begin))]
     public static class GameStartPatch
     {
+        private static readonly System.Random random = new System.Random();
+
         public static void Postfix()
         {
-            // The host is responsible for assigning roles
-            if (!PlayerControl.LocalPlayer.AmOwner) return;
-
-            RoleManager.ClearRoles();
-
-            var players = PlayerControl.AllPlayerControls;
-            if (players.Count <= 0) return;
-
-            var jesterChance = CustomGameOptions.JesterChance;
-            if (new System.Random().Next(0, 100) < jesterChance)
+            if (!AmongUsClient.Instance.AmHost)
             {
-                var potentialJesters = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
-                foreach (var player in players)
-                {
-                    if (player.Data.Role.Role == RoleTypes.Crewmate)
-                    {
-                        potentialJesters.Add(player);
-                    }
-                }
+                ModPlugin.Logger.LogInfo("Not the host, skipping role assignment.");
+                return;
+            }
 
-                if (potentialJesters.Count > 0)
+            ModPlugin.Logger.LogInfo("Host is assigning roles...");
+            RoleManager.Instance.ClearAllRoles();
+
+            float jesterChance = CustomGameOptions.JesterChance;
+
+            if (random.Next(0, 100) < jesterChance)
+            {
+                var crewmates = PlayerControl.AllPlayerControls
+                    .ToArray()
+                    .Where(p => !p.Data.IsDead && p.Data.Role.Role == RoleTypes.Crewmate)
+                    .ToList();
+
+                if (crewmates.Any())
                 {
-                    var jester = potentialJesters[new System.Random().Next(0, potentialJesters.Count)];
-                    RoleManager.SetRole(jester, RoleType.Jester);
+                    var jester = crewmates[random.Next(crewmates.Count)];
+                    RoleManager.Instance.SetRole(jester, RoleType.Jester);
                     NetworkManager.SendRoleAssignment(jester, RoleType.Jester);
+                }
+                else
+                {
+                    ModPlugin.Logger.LogWarning("No potential crewmates found to become Jester.");
                 }
             }
         }
