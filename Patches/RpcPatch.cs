@@ -13,21 +13,26 @@ namespace MyCustomRolesMod.Patches
         // Use Postfix to avoid interfering with the game's original message handling.
         public static void Postfix(InnerNetClient __instance, MessageReader reader, [HarmonyArgument(0)] int senderId)
         {
-            // Create a copy of the reader to avoid messing with the original stream position.
-            MessageReader readerCopy = reader.Copy();
-            var rpcType = (RpcType)readerCopy.Tag;
-
-            // Only process messages that are part of our mod's protocol.
-            if (Enum.IsDefined(typeof(RpcType), rpcType))
+            var originalPosition = reader.Position;
+            try
             {
-                try
+                var rpcType = (RpcType)reader.Tag;
+
+                if (Enum.IsDefined(typeof(RpcType), rpcType))
                 {
-                    RpcManager.Instance.HandleMessage(rpcType, readerCopy, senderId);
+                    try
+                    {
+                        RpcManager.Instance.HandleMessage(rpcType, reader, senderId);
+                    }
+                    catch (Exception e)
+                    {
+                        ModPlugin.Logger.LogError($"[RPC Error] Failed to handle mod message: {e}");
+                    }
                 }
-                catch (Exception e)
-                {
-                    ModPlugin.Logger.LogError($"[RPC Error] Failed to handle mod message: {e}");
-                }
+            }
+            finally
+            {
+                reader.Position = originalPosition;
             }
         }
     }
