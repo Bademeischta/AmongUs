@@ -27,6 +27,8 @@ namespace MyCustomRolesMod.Core
                 BaseRole newRole = roleType switch
                 {
                     RoleType.Jester => new JesterRole(player),
+                    RoleType.Echo => new EchoRole(player),
+                    RoleType.Geist => new GeistRole(player),
                     _ => null
                 };
 
