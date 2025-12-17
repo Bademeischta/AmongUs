@@ -7,8 +7,8 @@
         <Version>1.0.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
-        <!-- ADJUST THIS PATH TO YOUR AMONG US GAME DIRECTORY -->
-        <AmongUsGamePath>C:\Program Files (x86)\Steam\steamapps\common\Among Us</AmongUsGamePath>
+        <!-- Path to the game assemblies. -->
+        <AmongUsGamePath>$(MSBuildThisFileDirectory)/lib/AmongUs</AmongUsGamePath>
     </PropertyGroup>
 
     <ItemGroup>
