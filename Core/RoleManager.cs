@@ -29,6 +29,9 @@ namespace MyCustomRolesMod.Core
                     RoleType.Jester => new JesterRole(player),
                     RoleType.Echo => new EchoRole(player),
                     RoleType.Geist => new GeistRole(player),
+                    RoleType.Witness => new WitnessRole(player),
+                    RoleType.Puppeteer => new PuppeteerRole(player),
+                    RoleType.Glitch => new GlitchRole(player),
                     _ => null
                 };
 

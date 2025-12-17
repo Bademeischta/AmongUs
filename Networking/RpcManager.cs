@@ -87,6 +87,35 @@ namespace MyCustomRolesMod.Networking
             AmongUsClient.Instance.SendOrDisconnect(finalWriter, targetClientId ?? -1);
         }
 
+        public void SendSetWitnessTestimony(byte playerId, string testimony)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.SetWitnessTestimony);
+            writer.Write(playerId);
+            writer.Write(testimony);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendSetPuppeteerForcedMessage(byte playerId, string message)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.SetPuppeteerForcedMessage);
+            writer.Write(playerId);
+            writer.Write(message ?? "");
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendSetGlitchCorruptedSystem(int systemId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.SetGlitchCorruptedSystem);
+            writer.Write(systemId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
         public void HandleMessage(RpcType rpcType, MessageReader reader, int senderId)
         {
             MessageReader payloadReader = null;
@@ -114,6 +143,9 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.MarkPlayer: HandleMarkPlayer(payloadReader); break;
                     case RpcType.SyncMarkedPlayer: HandleSyncMarkedPlayer(payloadReader); break;
                     case RpcType.SetFakeTimeOfDeath: HandleSetFakeTimeOfDeath(payloadReader); break;
+                    case RpcType.SetWitnessTestimony: HandleSetWitnessTestimony(payloadReader); break;
+                    case RpcType.SetPuppeteerForcedMessage: HandleSetPuppeteerForcedMessage(payloadReader); break;
+                    case RpcType.SetGlitchCorruptedSystem: HandleSetGlitchCorruptedSystem(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -301,6 +333,26 @@ namespace MyCustomRolesMod.Networking
                     body.TimeOfDeath = fakeTime;
                 }
             }
+        }
+
+        private void HandleSetWitnessTestimony(MessageReader reader)
+        {
+            var playerId = reader.ReadByte();
+            var testimony = reader.ReadString();
+            WitnessManager.Instance.SetTestimony(playerId, testimony);
+        }
+
+        private void HandleSetPuppeteerForcedMessage(MessageReader reader)
+        {
+            var playerId = reader.ReadByte();
+            var message = reader.ReadString();
+            PuppeteerManager.Instance.SetForcedMessage(playerId, message);
+        }
+
+        private void HandleSetGlitchCorruptedSystem(MessageReader reader)
+        {
+            var systemId = reader.ReadInt32();
+            GlitchManager.Instance.CorruptSystem(systemId);
         }
 
         private class PendingRpc
