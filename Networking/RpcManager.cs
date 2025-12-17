@@ -15,7 +15,10 @@ namespace MyCustomRolesMod.Networking
         private readonly Dictionary<uint, PendingRpc> _pendingRpcs = new Dictionary<uint, PendingRpc>();
         private readonly List<uint> _toRemove = new List<uint>();
         private uint _nextMessageId = 0;
-        private readonly Queue<uint> _receivedMessageIds = new Queue<uint>();
+
+        // Use a HashSet for efficient O(1) lookups
+        private readonly HashSet<uint> _receivedMessageIds = new HashSet<uint>();
+        private const int ReceivedMessageCacheSize = 100;
 
         void Awake() => Instance = this;
 
@@ -70,7 +73,8 @@ namespace MyCustomRolesMod.Networking
         {
             if (!AmongUsClient.Instance.AmHost)
             {
-                writer.Recycle();
+                // Clients send messages directly, they don't use the Send/SendTo from RpcManager
+                AmongUsClient.Instance.SendOrDisconnect(writer);
                 return;
             }
 
@@ -96,32 +100,56 @@ namespace MyCustomRolesMod.Networking
                 if (rpcType == RpcType.VersionCheck) { HandleVersionCheck(reader); return; }
                 if (rpcType == RpcType.VersionResponse) { HandleVersionResponse(reader, senderId); return; }
 
-                var messageId = reader.ReadUInt32();
-                if (!AmongUsClient.Instance.AmHost && HasBeenReceived(messageId)) { SendAck(messageId); return; }
-
-                var payload = reader.ReadBytesAndSize();
-                payloadReader = MessageReader.Get(payload);
-
-                switch (rpcType)
+                if (AmongUsClient.Instance.AmHost)
                 {
-                    case RpcType.SetRole: HandleSetRole(payloadReader); break;
-                    case RpcType.SyncAllRoles: HandleSyncAllRoles(payloadReader); break;
-                    case RpcType.SyncOptions: HandleSyncOptions(payloadReader); break;
-                    case RpcType.SetInfectedWord: HandleSetInfectedWord(payloadReader); break;
-                    case RpcType.SyncInfectedWord: HandleSyncInfectedWord(payloadReader); break;
-                    case RpcType.CmdPlayerUsedInfectedWord: HandleCmdPlayerUsedInfectedWord(payloadReader, senderId); break;
-                    case RpcType.RpcPlayerUsedInfectedWord: HandleRpcPlayerUsedInfectedWord(payloadReader); break;
-                    case RpcType.MarkPlayer: HandleMarkPlayer(payloadReader); break;
-                    case RpcType.SyncMarkedPlayer: HandleSyncMarkedPlayer(payloadReader); break;
-                    case RpcType.SetFakeTimeOfDeath: HandleSetFakeTimeOfDeath(payloadReader); break;
-                    default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
-                }
+                    // Host-side message handling
+                    var messageId = reader.ReadUInt32();
+                    if(HasBeenReceived(messageId)) return;
 
-                if (!AmongUsClient.Instance.AmHost) SendAck(messageId);
+                    var payload = reader.ReadBytesAndSize();
+                    payloadReader = MessageReader.Get(payload);
+
+                    HandleHostMessage(rpcType, payloadReader, senderId);
+
+                    SendAck(messageId, senderId);
+                }
+                else
+                {
+                    // Client-side message handling
+                    var payload = reader.ReadBytesAndSize();
+                    payloadReader = MessageReader.Get(payload);
+                    HandleClientMessage(rpcType, payloadReader);
+                }
             }
             finally
             {
                 payloadReader?.Recycle();
+            }
+        }
+
+        private void HandleHostMessage(RpcType rpcType, MessageReader reader, int senderId)
+        {
+            switch (rpcType)
+            {
+                case RpcType.SetInfectedWord: HandleSetInfectedWord(reader); break;
+                case RpcType.CmdPlayerUsedInfectedWord: HandleCmdPlayerUsedInfectedWord(reader, senderId); break;
+                case RpcType.MarkPlayer: HandleMarkPlayer(reader); break;
+                default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled host message type: {rpcType}"); break;
+            }
+        }
+
+        private void HandleClientMessage(RpcType rpcType, MessageReader reader)
+        {
+            switch (rpcType)
+            {
+                case RpcType.SetRole: HandleSetRole(reader); break;
+                case RpcType.SyncAllRoles: HandleSyncAllRoles(reader); break;
+                case RpcType.SyncOptions: HandleSyncOptions(reader); break;
+                case RpcType.SyncInfectedWord: HandleSyncInfectedWord(reader); break;
+                case RpcType.RpcPlayerUsedInfectedWord: HandleRpcPlayerUsedInfectedWord(reader); break;
+                case RpcType.SyncMarkedPlayer: HandleSyncMarkedPlayer(reader); break;
+                case RpcType.SetFakeTimeOfDeath: HandleSetFakeTimeOfDeath(reader); break;
+                default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled client message type: {rpcType}"); break;
             }
         }
 
@@ -134,21 +162,26 @@ namespace MyCustomRolesMod.Networking
             }
         }
 
-        private void SendAck(uint messageId)
+        private void SendAck(uint messageId, int targetClientId)
         {
             var writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage((byte)RpcType.Acknowledge);
             writer.Write(messageId);
             writer.EndMessage();
-            AmongUsClient.Instance.SendOrDisconnect(writer);
+            AmongUsClient.Instance.SendOrDisconnect(writer, targetClientId);
             writer.Recycle();
         }
 
         private bool HasBeenReceived(uint messageId)
         {
             if (_receivedMessageIds.Contains(messageId)) return true;
-            _receivedMessageIds.Enqueue(messageId);
-            if (_receivedMessageIds.Count > 100) _receivedMessageIds.Dequeue();
+
+            if (_receivedMessageIds.Count >= ReceivedMessageCacheSize)
+            {
+                _receivedMessageIds.Clear(); // Clear the set to prevent it from growing indefinitely
+            }
+
+            _receivedMessageIds.Add(messageId);
             return false;
         }
 
@@ -176,7 +209,7 @@ namespace MyCustomRolesMod.Networking
             }
             else
             {
-                 HandshakeManager.UnverifiedClients.Remove(senderId);
+                 HandshakeManager.RemoveUnverifiedClient(senderId);
             }
         }
 
@@ -225,8 +258,6 @@ namespace MyCustomRolesMod.Networking
 
         private void HandleSyncInfectedWord(MessageReader reader)
         {
-            // Clients receive the word from the host and update their local state
-            if (AmongUsClient.Instance.AmHost) return;
             var word = reader.ReadString();
             EchoManager.Instance.SetInfectedWord(word);
         }
@@ -277,7 +308,6 @@ namespace MyCustomRolesMod.Networking
 
         private void HandleSyncMarkedPlayer(MessageReader reader)
         {
-            if (AmongUsClient.Instance.AmHost) return;
             var playerId = reader.ReadByte();
             var fakeTime = reader.ReadSingle();
             GeistManager.Instance.SetMarkedPlayer(playerId, fakeTime);

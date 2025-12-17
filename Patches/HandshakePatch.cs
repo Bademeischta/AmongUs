@@ -8,29 +8,57 @@ namespace MyCustomRolesMod.Patches
 {
     public static class HandshakeManager
     {
-        public const byte ProtocolVersion = 4;
+        public const byte ProtocolVersion = 1;
+        public static readonly List<int> UnverifiedClients = new List<int>();
+        private static readonly object _lock = new object();
 
-        // Host-side: Keep track of clients that have not yet been verified.
-        public static readonly HashSet<int> UnverifiedClients = new HashSet<int>();
+        public static void AddUnverifiedClient(int clientId)
+        {
+            lock (_lock)
+            {
+                if (!UnverifiedClients.Contains(clientId))
+                {
+                    UnverifiedClients.Add(clientId);
+                }
+            }
+        }
+
+        public static void RemoveUnverifiedClient(int clientId)
+        {
+            lock (_lock)
+            {
+                UnverifiedClients.Remove(clientId);
+            }
+        }
     }
 
-    [HarmonyPatch(typeof(GameLobby), nameof(GameLobby.OnPlayerJoined))]
-    public static class HandshakePatch
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerJoined))]
+    public static class JoinPatch
     {
-        public static void Postfix(GameLobby __instance, [HarmonyArgument(0)] PlayerControl newPlayer)
+        public static void Postfix(PlayerControl newPlayer)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            if (newPlayer == PlayerControl.LocalPlayer) return;
 
-            HandshakeManager.UnverifiedClients.Add(newPlayer.OwnerId);
+            HandshakeManager.AddUnverifiedClient(newPlayer.OwnerId);
 
             var writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage((byte)RpcType.VersionCheck);
             writer.Write(HandshakeManager.ProtocolVersion);
             writer.EndMessage();
-
-            // This is a handshake message, it doesn't need the full ACK/retry treatment.
             AmongUsClient.Instance.SendOrDisconnect(writer, newPlayer.OwnerId);
+            writer.Recycle();
+        }
+    }
+
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerLeft))]
+    public static class LeavePatch
+    {
+        public static void Postfix(int clientId, bool amHost)
+        {
+            if (amHost)
+            {
+                HandshakeManager.RemoveUnverifiedClient(clientId);
+            }
         }
     }
 }

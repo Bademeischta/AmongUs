@@ -21,37 +21,47 @@ namespace MyCustomRolesMod.Patches
             GeistManager.Instance.Clear();
 
             var allPlayers = PlayerControl.AllPlayerControls.ToArray().Where(p => !p.Data.IsDead).ToList();
-            var crewmates = allPlayers.Where(p => p.Data.Role.Role == RoleTypes.Crewmate).ToList();
-            var impostors = allPlayers.Where(p => p.Data.Role.Role == RoleTypes.Impostor).ToList();
+            var initialCrewmates = allPlayers.Where(p => p.Data.Role.Role == RoleTypes.Crewmate).ToList();
+            var initialImpostors = allPlayers.Where(p => p.Data.Role.Role == RoleTypes.Impostor).ToList();
+
+            var availableCrewmates = new List<PlayerControl>(initialCrewmates);
+            var availableImpostors = new List<PlayerControl>(initialImpostors);
 
             // --- Geist Assignment (Impostor Role) ---
-            if (impostors.Any() && _random.Next(0, 100) < ModPlugin.ModConfig.GeistChance.Value)
+            // Ensure at least one vanilla impostor remains, if possible.
+            if (availableImpostors.Count > 1 && _random.Next(0, 100) < ModPlugin.ModConfig.GeistChance.Value)
             {
-                var geist = impostors[_random.Next(impostors.Count)];
+                var geist = availableImpostors[_random.Next(availableImpostors.Count)];
                 AssignRole(geist, RoleType.Geist);
-                impostors.Remove(geist);
+                availableImpostors.Remove(geist);
             }
 
             // --- Jester Assignment (Crewmate Role) ---
-            if (crewmates.Any() && _random.Next(0, 100) < ModPlugin.ModConfig.JesterChance.Value)
+            if (availableCrewmates.Any() && _random.Next(0, 100) < ModPlugin.ModConfig.JesterChance.Value)
             {
-                var jester = crewmates[_random.Next(crewmates.Count)];
+                var jester = availableCrewmates[_random.Next(availableCrewmates.Count)];
                 AssignRole(jester, RoleType.Jester);
-                crewmates.Remove(jester);
+                availableCrewmates.Remove(jester);
             }
 
             // --- Echo Assignment (Crewmate Role) ---
-            if (crewmates.Any() && _random.Next(0, 100) < ModPlugin.ModConfig.EchoChance.Value)
+            if (availableCrewmates.Any() && _random.Next(0, 100) < ModPlugin.ModConfig.EchoChance.Value)
             {
-                var echo = crewmates[_random.Next(crewmates.Count)];
+                var echo = availableCrewmates[_random.Next(availableCrewmates.Count)];
                 AssignRole(echo, RoleType.Echo);
-                crewmates.Remove(echo);
+                availableCrewmates.Remove(echo);
+            }
+
+            // --- Balance Validation ---
+            if (availableImpostors.Count == 0 && initialImpostors.Any())
+            {
+                ModPlugin.Logger.LogWarning("[GameStart] All impostors were converted to custom roles. This may unbalance the game.");
+                // In a more advanced implementation, we might revert a role assignment here.
             }
         }
 
         private static void AssignRole(PlayerControl player, RoleType roleType)
         {
-            // CRITICAL: Set state LOCALLY first.
             RoleManager.Instance.SetRole(player, roleType);
 
             if (roleType == RoleType.Geist)

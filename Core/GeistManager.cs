@@ -8,48 +8,89 @@ namespace MyCustomRolesMod.Core
         private static GeistManager _instance;
         public static GeistManager Instance => _instance ??= new GeistManager();
 
-        // Key: PlayerId, Value: Time of Mark
         private readonly Dictionary<byte, float> _markedPlayers = new Dictionary<byte, float>();
+        private readonly object _lock = new object();
         public PlayerControl GeistPlayer { get; set; }
 
         private GeistManager() { }
 
         public void MarkPlayer(byte playerId)
         {
-            if (_markedPlayers.ContainsKey(playerId)) return;
-            _markedPlayers[playerId] = Time.time;
+            lock (_lock)
+            {
+                if (_markedPlayers.ContainsKey(playerId)) return;
+                _markedPlayers[playerId] = Time.time;
+            }
         }
 
         public void SetMarkedPlayer(byte playerId, float time)
         {
-            _markedPlayers[playerId] = time;
+            lock (_lock)
+            {
+                _markedPlayers[playerId] = time;
+            }
         }
 
         public bool IsMarked(byte playerId)
         {
-            return _markedPlayers.ContainsKey(playerId);
+            lock (_lock)
+            {
+                return _markedPlayers.ContainsKey(playerId);
+            }
         }
 
         public float GetTimeOfDeath(byte playerId)
         {
-            _markedPlayers.TryGetValue(playerId, out var time);
-            return time;
+            lock (_lock)
+            {
+                _markedPlayers.TryGetValue(playerId, out var time);
+                return time;
+            }
         }
 
         public void RemoveMark(byte playerId)
         {
-            _markedPlayers.Remove(playerId);
+            lock (_lock)
+            {
+                _markedPlayers.Remove(playerId);
+            }
         }
 
         public void Clear()
         {
-            _markedPlayers.Clear();
-            GeistPlayer = null;
+            lock (_lock)
+            {
+                _markedPlayers.Clear();
+                GeistPlayer = null;
+            }
         }
 
         public Dictionary<byte, float> GetAllMarkedPlayers()
         {
-            return new Dictionary<byte, float>(_markedPlayers);
+            lock (_lock)
+            {
+                return new Dictionary<byte, float>(_markedPlayers);
+            }
+        }
+
+        public void UpdateMarkedPlayers(float currentTime, System.Action<byte> onKill)
+        {
+            lock (_lock)
+            {
+                var toRemove = new List<byte>();
+                foreach (var kvp in _markedPlayers)
+                {
+                    if (currentTime - kvp.Value > 45f) // MARKED_DEATH_TIMER
+                    {
+                        toRemove.Add(kvp.Key);
+                        onKill?.Invoke(kvp.Key);
+                    }
+                }
+                foreach (var id in toRemove)
+                {
+                    _markedPlayers.Remove(id);
+                }
+            }
         }
     }
 }

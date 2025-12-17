@@ -3,30 +3,34 @@ using Hazel;
 using MyCustomRolesMod.Networking;
 using MyCustomRolesMod.Networking.Packets;
 using System;
-using System.Linq;
 
 namespace MyCustomRolesMod.Patches
 {
     [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleMessage))]
     public static class RpcPatch
     {
-        // Use Postfix to avoid interfering with the game's original message handling.
         public static void Postfix(InnerNetClient __instance, MessageReader reader, [HarmonyArgument(0)] int senderId)
         {
-            // Create a copy of the reader to avoid messing with the original stream position.
-            MessageReader readerCopy = reader.Copy();
-            var rpcType = (RpcType)readerCopy.Tag;
+            var rpcType = (RpcType)reader.Tag;
 
             // Only process messages that are part of our mod's protocol.
             if (Enum.IsDefined(typeof(RpcType), rpcType))
             {
+                // Save the original position of the reader's stream.
+                int originalPosition = reader.Position;
                 try
                 {
-                    RpcManager.Instance.HandleMessage(rpcType, readerCopy, senderId);
+                    RpcManager.Instance.HandleMessage(rpcType, reader, senderId);
                 }
                 catch (Exception e)
                 {
                     ModPlugin.Logger.LogError($"[RPC Error] Failed to handle mod message: {e}");
+                }
+                finally
+                {
+                    // CRITICAL: Restore the reader's position so the game's original
+                    // code can read the message from the beginning.
+                    reader.Position = originalPosition;
                 }
             }
         }

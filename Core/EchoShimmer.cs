@@ -12,7 +12,15 @@ namespace MyCustomRolesMod.Core
         void Awake()
         {
             _player = GetComponent<PlayerControl>();
-            _originalColor = _player.cosmetics.BodyColor;
+            if (_player?.cosmetics != null)
+            {
+                _originalColor = _player.cosmetics.BodyColor;
+            }
+            else
+            {
+                ModPlugin.Logger.LogError("[EchoShimmer] Failed to get PlayerControl or cosmetics component!");
+                Destroy(this); // Destroy the component if it can't initialize properly.
+            }
         }
 
         void Update()
@@ -21,11 +29,17 @@ namespace MyCustomRolesMod.Core
             {
                 _shimmerTimer -= Time.deltaTime;
                 var color = Color.Lerp(_originalColor, Color.cyan, _shimmerTimer / ShimmerDuration);
-                _player.cosmetics.SetBodyColor(color);
+                if (_player?.cosmetics != null)
+                {
+                    _player.cosmetics.SetBodyColor(color);
+                }
             }
             else
             {
-                _player.cosmetics.SetBodyColor(_originalColor);
+                if (_player?.cosmetics != null)
+                {
+                    _player.cosmetics.SetBodyColor(_originalColor);
+                }
                 Destroy(this);
             }
         }
