@@ -107,6 +107,13 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.SetRole: HandleSetRole(payloadReader); break;
                     case RpcType.SyncAllRoles: HandleSyncAllRoles(payloadReader); break;
                     case RpcType.SyncOptions: HandleSyncOptions(payloadReader); break;
+                    case RpcType.SetInfectedWord: HandleSetInfectedWord(payloadReader); break;
+                    case RpcType.SyncInfectedWord: HandleSyncInfectedWord(payloadReader); break;
+                    case RpcType.CmdPlayerUsedInfectedWord: HandleCmdPlayerUsedInfectedWord(payloadReader, senderId); break;
+                    case RpcType.RpcPlayerUsedInfectedWord: HandleRpcPlayerUsedInfectedWord(payloadReader); break;
+                    case RpcType.MarkPlayer: HandleMarkPlayer(payloadReader); break;
+                    case RpcType.SyncMarkedPlayer: HandleSyncMarkedPlayer(payloadReader); break;
+                    case RpcType.SetFakeTimeOfDeath: HandleSetFakeTimeOfDeath(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -199,6 +206,97 @@ namespace MyCustomRolesMod.Networking
         {
             var packet = OptionsPacket.Deserialize(reader);
             ModPlugin.ModConfig.JesterChance.Value = packet.JesterChance;
+        }
+
+        private void HandleSetInfectedWord(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var word = reader.ReadString();
+            EchoManager.Instance.SetInfectedWord(word);
+
+            // Broadcast the new word to all clients
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.SyncInfectedWord);
+            writer.Write(word);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        private void HandleSyncInfectedWord(MessageReader reader)
+        {
+            // Clients receive the word from the host and update their local state
+            if (AmongUsClient.Instance.AmHost) return;
+            var word = reader.ReadString();
+            EchoManager.Instance.SetInfectedWord(word);
+        }
+
+        private void HandleCmdPlayerUsedInfectedWord(MessageReader reader, int senderId)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var playerId = reader.ReadByte();
+            var player = GameData.Instance.GetPlayerById(playerId)?.Object;
+            if (player != null)
+            {
+                // Host validates and then broadcasts the shimmer effect to all clients
+                var writer = MessageWriter.Get(SendOption.Reliable);
+                writer.StartMessage((byte)RpcType.RpcPlayerUsedInfectedWord);
+                writer.Write(playerId);
+                writer.EndMessage();
+                Send(writer); // Broadcast to all
+            }
+        }
+
+        private void HandleRpcPlayerUsedInfectedWord(MessageReader reader)
+        {
+            var playerId = reader.ReadByte();
+            var player = GameData.Instance.GetPlayerById(playerId)?.Object;
+            if (player != null)
+            {
+                var shimmer = player.gameObject.GetComponent<EchoShimmer>() ?? player.gameObject.AddComponent<EchoShimmer>();
+                shimmer.StartShimmer();
+            }
+        }
+
+        private void HandleMarkPlayer(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            var playerId = reader.ReadByte();
+            GeistManager.Instance.MarkPlayer(playerId);
+
+            var fakeTime = GeistManager.Instance.GetTimeOfDeath(playerId);
+
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.SyncMarkedPlayer);
+            writer.Write(playerId);
+            writer.Write(fakeTime);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        private void HandleSyncMarkedPlayer(MessageReader reader)
+        {
+            if (AmongUsClient.Instance.AmHost) return;
+            var playerId = reader.ReadByte();
+            var fakeTime = reader.ReadSingle();
+            GeistManager.Instance.SetMarkedPlayer(playerId, fakeTime);
+        }
+
+        private void HandleSetFakeTimeOfDeath(MessageReader reader)
+        {
+            var netId = reader.ReadPackedUInt32();
+            var fakeTime = reader.ReadSingle();
+
+            var obj = AmongUsClient.Instance.FindNetObject(netId);
+            if (obj != null)
+            {
+                var body = obj.GetComponent<DeadBody>();
+                if (body != null)
+                {
+                    body.TimeOfDeath = fakeTime;
+                }
+            }
         }
 
         private class PendingRpc

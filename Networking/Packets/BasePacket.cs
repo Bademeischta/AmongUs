@@ -12,6 +12,17 @@ namespace MyCustomRolesMod.Networking.Packets
         SyncAllRoles,
         SyncOptions,
 
+        // Echo Role
+        SetInfectedWord, // Client -> Host
+        SyncInfectedWord, // Host -> Client
+        CmdPlayerUsedInfectedWord, // Client -> Host
+        RpcPlayerUsedInfectedWord, // Host -> Client
+
+        // Geist Role
+        MarkPlayer, // Client -> Host
+        SyncMarkedPlayer, // Host -> Client
+        SetFakeTimeOfDeath, // Host -> Client
+
         // Reliability
         Acknowledge
     }

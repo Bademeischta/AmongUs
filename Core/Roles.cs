@@ -18,7 +18,9 @@ namespace MyCustomRolesMod.Core
     public enum RoleType : byte
     {
         None,
-        Jester
+        Jester,
+        Echo,
+        Geist
     }
 
     public class JesterRole : BaseRole
@@ -28,5 +30,23 @@ namespace MyCustomRolesMod.Core
         public override RoleType RoleType => RoleType.Jester;
 
         public JesterRole(PlayerControl player) : base(player) { }
+    }
+
+    public class EchoRole : BaseRole
+    {
+        public override string Name => "Echo";
+        public override Color Color => new Color(0.5f, 0.5f, 1f); // A light blue/purple
+        public override RoleType RoleType => RoleType.Echo;
+
+        public EchoRole(PlayerControl player) : base(player) { }
+    }
+
+    public class GeistRole : BaseRole
+    {
+        public override string Name => "Geist";
+        public override Color Color => new Color(0.8f, 0.8f, 0.8f); // A light grey/white
+        public override RoleType RoleType => RoleType.Geist;
+
+        public GeistRole(PlayerControl player) : base(player) { }
     }
 }
