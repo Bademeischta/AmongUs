@@ -8,32 +8,22 @@ namespace MyCustomRolesMod.Patches
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
     public static class PlayerControlUpdatePatch
     {
-        private const float MARKED_DEATH_TIMER = 45f;
-
         public static void Postfix(PlayerControl __instance)
         {
             if (!AmongUsClient.Instance.AmHost) return;
-            // Only run host logic once per frame on the host's player object
             if (__instance.PlayerId != PlayerControl.LocalPlayer.PlayerId) return;
 
-            var geistPlayer = GeistManager.Instance.GeistPlayer;
-            if (geistPlayer == null) return;
+            var geist = GeistManager.Instance.GeistPlayer;
+            if (geist == null) return;
 
-            // Use ToList() to create a copy to iterate over, allowing modification of the original dictionary
-            var markedPlayers = GeistManager.Instance.GetAllMarkedPlayers().ToList();
-
-            foreach (var markedPlayerData in markedPlayers)
+            GeistManager.Instance.UpdateMarkedPlayers(Time.time, (playerId) =>
             {
-                var player = GameData.Instance.GetPlayerById(markedPlayerData.Key)?.Object;
+                var player = GameData.Instance.GetPlayerById(playerId)?.Object;
                 if (player != null && !player.Data.IsDead)
                 {
-                    if (Time.time - markedPlayerData.Value > MARKED_DEATH_TIMER)
-                    {
-                        // Let the Geist perform the kill. The postfix patch on RpcMurderPlayer will handle the rest.
-                        geistPlayer.RpcMurderPlayer(player, true);
-                    }
+                    geist.RpcMurderPlayer(player, true);
                 }
-            }
+            });
         }
     }
 

@@ -12,7 +12,15 @@ namespace MyCustomRolesMod.Core
         void Awake()
         {
             _player = GetComponent<PlayerControl>();
-            _originalColor = _player.cosmetics.BodyColor;
+            if (_player?.cosmetics != null)
+            {
+                _originalColor = _player.cosmetics.BodyColor;
+            }
+            else
+            {
+                ModPlugin.Logger.LogError("[EchoShimmer] Failed to get cosmetics!");
+                Destroy(this);
+            }
         }
 
         void Update()

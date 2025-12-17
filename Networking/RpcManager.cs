@@ -15,7 +15,7 @@ namespace MyCustomRolesMod.Networking
         private readonly Dictionary<uint, PendingRpc> _pendingRpcs = new Dictionary<uint, PendingRpc>();
         private readonly List<uint> _toRemove = new List<uint>();
         private uint _nextMessageId = 0;
-        private readonly Queue<uint> _receivedMessageIds = new Queue<uint>();
+        private readonly HashSet<uint> _receivedMessageIds = new HashSet<uint>();
 
         void Awake() => Instance = this;
 
@@ -146,10 +146,11 @@ namespace MyCustomRolesMod.Networking
 
         private bool HasBeenReceived(uint messageId)
         {
-            if (_receivedMessageIds.Contains(messageId)) return true;
-            _receivedMessageIds.Enqueue(messageId);
-            if (_receivedMessageIds.Count > 100) _receivedMessageIds.Dequeue();
-            return false;
+            if (_receivedMessageIds.Count > 200)
+            {
+                _receivedMessageIds.Clear();
+            }
+            return !_receivedMessageIds.Add(messageId);
         }
 
         private void HandleVersionCheck(MessageReader reader)
@@ -176,7 +177,10 @@ namespace MyCustomRolesMod.Networking
             }
             else
             {
-                 HandshakeManager.UnverifiedClients.Remove(senderId);
+                lock(HandshakeManager._lock)
+                {
+                    HandshakeManager.UnverifiedClients.Remove(senderId);
+                }
             }
         }
 
