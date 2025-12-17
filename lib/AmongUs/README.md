@@ -1,6 +1,8 @@
 # Missing Game Assemblies
 
-This directory is a placeholder for the required Among Us game assemblies. To build this mod, you must provide these files yourself.
+**Note:** The recommended way to build this mod is to set the `AMONG_US_GAME_PATH` environment variable. See the main `README.md` for details.
+
+If you choose not to set the environment variable, you must manually copy the required Among Us game assemblies into this directory.
 
 ## Required Files
 

@@ -34,7 +34,39 @@ In dieser Datei können fortgeschrittene Einstellungen wie Netzwerk-Timeouts und
 
 ## Build-Anleitung (für Entwickler)
 
-1.  **Repository klonen.**
-2.  **.csproj-Datei anpassen:** Öffne `MyCustomRolesMod.csproj` und passe den `<AmongUsGamePath>` an dein lokales Spielverzeichnis an.
-3.  **Projekt kompilieren:** Baue das Projekt in deiner IDE. Dies erstellt die `MyCustomRolesMod.dll`.
-4.  **Distribution erstellen:** Führe das `build.sh`-Skript aus. Es nimmt die kompilierte DLL und verpackt sie zusammen mit den notwendigen BepInEx-Dateien in ein distributionsfertiges ZIP-Archiv im Hauptverzeichnis.
+Um diesen Mod unter Windows zu kompilieren, benötigen Sie das **.NET 6.0 SDK**.
+
+### Schritt 1: Abhängigkeiten bereitstellen
+
+**Option A: Steam-Pfad angeben (Empfohlen)**
+Der einfachste Weg ist, eine Umgebungsvariable `AMONG_US_GAME_PATH` zu setzen, die auf Ihr Spielverzeichnis zeigt.
+
+1.  Öffnen Sie die Eingabeaufforderung (CMD) oder PowerShell.
+2.  Setzen Sie die Variable und führen Sie das Build-Skript aus:
+
+    *   **In PowerShell:**
+        ```powershell
+        $env:AMONG_US_GAME_PATH = "C:\Program Files (x86)\Steam\steamapps\common\Among Us"
+        .\build.bat
+        ```
+    *   **In der klassischen CMD:**
+        ```cmd
+        set AMONG_US_GAME_PATH="C:\Program Files (x86)\Steam\steamapps\common\Among Us"
+        build.bat
+        ```
+
+**Option B: Dateien manuell kopieren**
+Wenn Sie die Variable nicht setzen möchten, können Sie die Spieldateien manuell in das Projekt kopieren. Anweisungen dazu finden Sie in der `lib\AmongUs\README.md`.
+
+**Zusätzliche Abhängigkeit: BepInEx**
+Das Skript benötigt außerdem die BepInEx-Dateien, um das finale ZIP-Paket zu erstellen.
+1.  Laden Sie `BepInEx 6.0.0-pre.1 IL2CPP` von der [offiziellen BepInEx-Release-Seite](https://github.com/BepInEx/BepInEx/releases/tag/v6.0.0-pre.1) herunter.
+2.  Entpacken Sie den Inhalt in einen Ordner namens `bepinex_files` im Hauptverzeichnis dieses Projekts.
+
+### Schritt 2: Build ausführen
+
+Nachdem alle Abhängigkeiten erfüllt sind, führen Sie einfach das Build-Skript aus, um eine vollständige `Distribution.zip`-Datei zu erstellen:
+```cmd
+build.bat
+```
+Das Skript wird Sie am Ende mit "pause" anhalten, damit Sie die Ausgabe in Ruhe lesen können.
