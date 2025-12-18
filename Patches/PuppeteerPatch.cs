@@ -5,6 +5,7 @@ using MyCustomRolesMod.Networking;
 using TMPro;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.UI;
 
 namespace MyCustomRolesMod.Patches
 {
@@ -13,14 +14,14 @@ namespace MyCustomRolesMod.Patches
     {
         private static GameObject _puppeteerButton;
         private static GameObject _puppeteerCanvas;
-        private static PlayerControl _selectedTarget;
+        private static global::PlayerControl _selectedTarget;
         private static string _selectedMessage;
         private static List<string> _messages = new List<string> { "I saw them vent!", "They're the killer!", "I'm skipping.", "Vote for me." };
 
-        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
-        public static void Postfix(HudManager __instance)
+        [HarmonyPatch(typeof(global::HudManager), nameof(global::HudManager.Update))]
+        public static void Postfix(global::HudManager __instance)
         {
-            var localPlayer = PlayerControl.LocalPlayer;
+            var localPlayer = global::PlayerControl.LocalPlayer;
             if (localPlayer == null || RoleManager.Instance.GetRole(localPlayer.PlayerId)?.RoleType != RoleType.Puppeteer)
             {
                 if (_puppeteerButton != null) _puppeteerButton.SetActive(false);
@@ -163,8 +164,8 @@ namespace MyCustomRolesMod.Patches
             }
         }
 
-        [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Update))]
-        public static void Postfix(MeetingHud __instance)
+        [HarmonyPatch(typeof(global::MeetingHud), nameof(global::MeetingHud.Update))]
+        public static void Postfix(global::MeetingHud __instance)
         {
             foreach (var player in __instance.playerStates)
             {

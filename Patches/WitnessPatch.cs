@@ -14,8 +14,8 @@ namespace MyCustomRolesMod.Patches
         private static TMP_InputField _inputField;
         private static string _testimony = "";
 
-        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
-        public static void Postfix(HudManager __instance)
+        [HarmonyPatch(typeof(global::HudManager), nameof(global::HudManager.Update))]
+        public static void Postfix(global::HudManager __instance)
         {
             var localPlayer = PlayerControl.LocalPlayer;
             if (localPlayer == null || RoleManager.Instance.GetRole(localPlayer.PlayerId)?.RoleType != RoleType.Witness)
@@ -161,8 +161,8 @@ namespace MyCustomRolesMod.Patches
             }
         }
 
-        [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
-        public static void Postfix(MeetingHud __instance)
+        [HarmonyPatch(typeof(global::MeetingHud), nameof(global::MeetingHud.Start))]
+        public static void Postfix(global::MeetingHud __instance)
         {
             if (PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null) return;
 

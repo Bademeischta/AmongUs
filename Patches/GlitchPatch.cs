@@ -38,8 +38,8 @@ namespace MyCustomRolesMod.Patches
         }
 
 
-        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
-        public static void Postfix(HudManager __instance)
+        [HarmonyPatch(typeof(global::HudManager), nameof(global::HudManager.Update))]
+        public static void Postfix(global::HudManager __instance)
         {
             var localPlayer = PlayerControl.LocalPlayer;
             if (localPlayer == null || RoleManager.Instance.GetRole(localPlayer.PlayerId)?.RoleType != RoleType.Glitch)
@@ -115,8 +115,8 @@ namespace MyCustomRolesMod.Patches
             return closest;
         }
 
-        [HarmonyPatch(typeof(PlayerTask), nameof(PlayerTask.Update))]
-        public static void Postfix(PlayerTask __instance)
+        [HarmonyPatch(typeof(global::PlayerTask), nameof(global::PlayerTask.Update))]
+        public static void Postfix(global::PlayerTask __instance)
         {
             if (__instance.Owner == PlayerControl.LocalPlayer && GlitchManager.Instance.IsSystemCorrupted((int)__instance.TaskType))
             {

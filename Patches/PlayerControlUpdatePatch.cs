@@ -1,5 +1,7 @@
 using HarmonyLib;
 using MyCustomRolesMod.Core;
+using MyCustomRolesMod.Networking;
+using MyCustomRolesMod.Networking.Packets;
 using UnityEngine;
 using System.Linq;
 
