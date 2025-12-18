@@ -1,6 +1,7 @@
 using HarmonyLib;
 using MyCustomRolesMod.Core;
 using MyCustomRolesMod.Networking;
+using MyCustomRolesMod.Networking.Packets;
 using System.Linq;
 using Hazel;
 using System.Collections.Generic;
@@ -56,18 +57,18 @@ namespace MyCustomRolesMod.Patches
                 ModPlugin.Logger.LogWarning("[GameStart] All impostors became custom roles! Reverting one...");
 
                 var playerToRevert = RoleManager.Instance.GetAllRoles()
-                    .Where(kvp => kvp.Value.RoleType == RoleType.Geist)
+                    .Where(kvp => kvp.Value == RoleType.Geist)
                     .Select(kvp => GameData.Instance.GetPlayerById(kvp.Key)?.Object)
                     .FirstOrDefault(p => p != null && originalImpostors.Contains(p));
 
                 if (playerToRevert != null)
                 {
-                    RoleManager.Instance.ClearRole(playerToRevert.PlayerId);
+                    RoleManager.Instance.SetRole(playerToRevert, RoleType.None);
 
                     var writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage((byte)RpcType.SetRole);
                     writer.Write(playerToRevert.PlayerId);
-                    writer.Write((byte)RoleType.None); // Assuming RoleType.None will clear the role
+                    writer.Write((byte)RoleType.None);
                     writer.EndMessage();
                     RpcManager.Instance.Send(writer);
                 }
