@@ -46,42 +46,60 @@ if defined AMONG_US_GAME_PATH (
     set "GAME_ASSEMBLY_PATH=%AMONG_US_GAME_PATH%\Among Us_Data\Managed"
     set "DOTNET_BUILD_CMD=%DOTNET_BUILD_CMD% -p:AmongUsGamePath="%AMONG_US_GAME_PATH%""
 ) else (
-    echo --^> AMONG_US_GAME_PATH not set. Using local 'lib\AmongUs' directory.
-    set "GAME_ASSEMBLY_PATH=lib\AmongUs"
+    echo --^> AMONG_US_GAME_PATH not set. Checking for game assemblies in BepInEx managed folder...
+    set "GAME_ASSEMBLY_PATH=bepinex_files\BepInEx\unity-libs"
+
+    if not exist "!GAME_ASSEMBLY_PATH!" (
+        echo --^> BepInEx unity-libs not found. Trying interop folder...
+        set "GAME_ASSEMBLY_PATH=bepinex_files\BepInEx\interop"
+    )
+
+    if not exist "!GAME_ASSEMBLY_PATH!" (
+        echo ERROR: Could not find game assemblies in BepInEx folders.
+        echo.
+        echo Please either:
+        echo   1. Set AMONG_US_GAME_PATH environment variable to your Among Us installation, OR
+        echo   2. Ensure bepinex_files contains the full BepInEx 6.0.0-pre.1 IL2CPP installation
+        pause
+        exit /b 1
+    )
+
+    if not exist "lib\AmongUs" mkdir "lib\AmongUs"
+    set "DOTNET_BUILD_CMD=%DOTNET_BUILD_CMD% -p:AmongUsGamePath=lib\AmongUs"
 )
 
 if not exist "!GAME_ASSEMBLY_PATH!" (
     echo ERROR: Assembly directory not found: "!GAME_ASSEMBLY_PATH!"
-    if not defined AMONG_US_GAME_PATH (
-         echo Please create the 'lib\AmongUs' directory and copy game files there, or set the AMONG_US_GAME_PATH variable.
-    )
     pause
     exit /b 1
 )
 
+:: Check for required assemblies
 set "ALL_FILES_FOUND=true"
-for %%F in (
-    "Assembly-CSharp.dll"
-    "Il2Cppmscorlib.dll"
-    "Hazel.dll"
-    "UnityEngine.CoreModule.dll"
-    "UnityEngine.UI.dll"
-    "UnityEngine.TextRenderingModule.dll"
-) do (
-    if not exist "!GAME_ASSEMBLY_PATH!\%%~F" (
-        echo ERROR: Missing required game assembly: !GAME_ASSEMBLY_PATH!\%%~F
+set "REQUIRED_ASSEMBLIES=Assembly-CSharp.dll Il2Cppmscorlib.dll Hazel.dll UnityEngine.CoreModule.dll UnityEngine.UI.dll UnityEngine.TextRenderingModule.dll"
+
+for %%F in (%REQUIRED_ASSEMBLIES%) do (
+    set "FOUND=false"
+
+    if exist "!GAME_ASSEMBLY_PATH!\%%~F" (
+        set "FOUND=true"
+        if not defined AMONG_US_GAME_PATH (
+            if not exist "lib\AmongUs\%%~F" (
+                copy "!GAME_ASSEMBLY_PATH!\%%~F" "lib\AmongUs\" >nul 2>&1
+            )
+        )
+    )
+
+    if "!FOUND!"=="false" (
+        echo ERROR: Missing required game assembly: %%~F
         set "ALL_FILES_FOUND=false"
     )
 )
 
 if "!ALL_FILES_FOUND!"=="false" (
     echo.
-    if defined AMONG_US_GAME_PATH (
-        echo Build failed. Could not find required assemblies in the provided game path.
-    ) else (
-        echo Build failed. Please copy the required files into 'lib\AmongUs'.
-        echo See 'lib\AmongUs\README.md' for more details, or set the AMONG_US_GAME_PATH environment variable.
-    )
+    echo Build failed. Could not find all required assemblies.
+    echo Please ensure you have the complete BepInEx installation or set AMONG_US_GAME_PATH.
     pause
     exit /b 1
 )
@@ -118,7 +136,7 @@ echo.
 :: Step 6: Assemble distribution
 echo Step 6: Assembling distribution package...
 mkdir "%DIST_DIR%\BepInEx\plugins" >nul 2>&1
-xcopy /s /e /i /q "%BEPINEX_DIR%" "%DIST_DIR%"
+xcopy /s /e /i /q "%BEPINEX_DIR%\*.*" "%DIST_DIR%"
 copy "%DLL_PATH%" "%DIST_DIR%\BepInEx\plugins\" >nul
 echo [OK] Distribution package assembled in '%DIST_DIR%'.
 echo.
