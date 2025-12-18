@@ -39,24 +39,23 @@ Um diesen Mod unter Windows zu kompilieren, benötigen Sie das **.NET 6.0 SDK**.
 ### Schritt 1: Abhängigkeiten bereitstellen
 
 **Option A: Steam-Pfad angeben (Empfohlen)**
-Der einfachste Weg ist, eine Umgebungsvariable `AMONG_US_GAME_PATH` zu setzen, die auf Ihr Spielverzeichnis zeigt.
+Der einfachste und zuverlässigste Weg ist, eine Umgebungsvariable `AMONG_US_GAME_PATH` zu setzen, die auf Ihr Spielverzeichnis zeigt.
 
-1.  Öffnen Sie die Eingabeaufforderung (CMD) oder PowerShell.
-2.  Setzen Sie die Variable und führen Sie das Build-Skript aus:
+*   **In PowerShell:**
+    ```powershell
+    $env:AMONG_US_GAME_PATH = "C:\Program Files (x86)\Steam\steamapps\common\Among Us"
+    .\build.bat
+    ```
+*   **In der klassischen CMD:**
+    ```cmd
+    set AMONG_US_GAME_PATH="C:\Program Files (x86)\Steam\steamapps\common\Among Us"
+    build.bat
+    ```
 
-    *   **In PowerShell:**
-        ```powershell
-        $env:AMONG_US_GAME_PATH = "C:\Program Files (x86)\Steam\steamapps\common\Among Us"
-        .\build.bat
-        ```
-    *   **In der klassischen CMD:**
-        ```cmd
-        set AMONG_US_GAME_PATH="C:\Program Files (x86)\Steam\steamapps\common\Among Us"
-        build.bat
-        ```
+**Option B: Automatische Erkennung (Fallback)**
+Wenn die `AMONG_US_GAME_PATH` Variable nicht gesetzt ist, versucht das Skript intelligent zu sein: Es sucht automatisch in den `bepinex_files`-Verzeichnissen nach den benötigten Spieldateien. In vielen Fällen findet es sie dort und kopiert sie für den Build-Prozess an die richtige Stelle. Sie müssen also eventuell nichts weiter tun.
 
-**Option B: Dateien manuell kopieren**
-Wenn Sie die Variable nicht setzen möchten, können Sie die Spieldateien manuell in das Projekt kopieren. Anweisungen dazu finden Sie in der `lib\AmongUs\README.md`.
+**Wichtiger Hinweis:** Die BepInEx-Distribution enthält nicht immer alle spiel-spezifischen Dateien (wie `Assembly-CSharp.dll`). Wenn das Skript diese Dateien nicht finden kann, müssen Sie Option A verwenden.
 
 **Zusätzliche Abhängigkeit: BepInEx**
 Das Skript benötigt außerdem die BepInEx-Dateien, um das finale ZIP-Paket zu erstellen.
