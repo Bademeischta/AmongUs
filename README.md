@@ -1,36 +1,70 @@
-# MyCustomRolesMod für Among Us (v4.1 - Production Grade)
+# MyCustomRolesMod für Among Us (v4.0.0 - Production Grade)
 
-Dieses Projekt ist ein BepInEx/HarmonyLib-Mod für das Spiel "Among Us", der ein extrem robustes und erweiterbares System für benutzerdefinierte Rollen hinzufügt. Die erste implementierte Rolle ist der **Jester** (Narr).
+Dieses Projekt ist ein BepInEx/HarmonyLib-Mod für das Spiel "Among Us", der ein extrem robustes und erweiterbares System für benutzerdefinierte Rollen hinzufügt.
 
-Diese Version (v4.1+) wurde von Grund auf neu geschrieben, mit einem Fokus auf **maximale Stabilität, Sicherheit und Performance**, um ein produktionsreifes Erlebnis zu gewährleisten.
+Diese Version zeichnet sich durch **maximale Stabilität, Sicherheit und Performance** aus. Das Herzstück ist ein eigenes Netzwerk-Protokoll, das Synchronisationsprobleme minimiert.
+
+## Rollen
+
+Der Mod fügt dem Spiel 6 neue Rollen hinzu (3 aktiv, 3 experimentell).
+
+### Aktive Rollen (Im Spiel verfügbar)
+
+Diese Rollen sind vollständig integriert und können über die Lobby-Optionen (Jester) oder die Konfigurationsdatei gesteuert werden.
+
+*   **Jester (Narr) - Neutral**
+    *   **Ziel:** Lass dich von den anderen Spielern aus dem Spiel wählen (exiled).
+    *   **Gewinnbedingung:** Wenn der Jester während eines Meetings rausgewählt wird, gewinnt er sofort das Spiel.
+    *   **Besonderheit:** Kann in den Lobby-Optionen konfiguriert werden ("Jester Chance").
+
+*   **Geist - Impostor**
+    *   **Ziel:** Eliminiere die Crew.
+    *   **Fähigkeit:** Ersetzt den normalen Kill durch einen **Fluch (Markierung)**.
+    *   **Effekt:** Ein markierter Spieler stirbt nicht sofort, sondern erst nach **45 Sekunden**. Dies verwirrt die Crew bezüglich des Zeitpunkts und Ortes des Angriffs.
+
+*   **Echo - Crewmate**
+    *   **Ziel:** Gewinne mit der Crew.
+    *   **Fähigkeit:** Kann ein "infiziertes Wort" festlegen.
+    *   **Befehl:** Schreibe `/infect <Wort>` in den Chat (z.B. `/infect sus`).
+    *   **Effekt:** Wenn ein anderer Spieler dieses Wort im Chat verwendet, **leuchtet er kurzzeitig bläulich auf** (Shimmer-Effekt). Dies kann helfen, Trolle zu entlarven oder Informationen zu markieren.
+
+### Experimentelle Rollen (Im Code enthalten)
+
+Diese Rollen sind bereits technisch implementiert (inklusive UI und Networking), aber in der aktuellen Version standardmäßig **nicht** der Rotation zugewiesen. Sie demonstrieren die Möglichkeiten des Systems.
+
+*   **Witness (Zeuge) - Crewmate**
+    *   **Fähigkeit:** Hat einen speziellen Button, um ein **Testament** zu verfassen.
+    *   **Effekt:** Wenn der Witness stirbt, wird sein Testament im nächsten Meeting für alle sichtbar beim toten Körper (oder im Chat) angezeigt.
+
+*   **Puppeteer (Puppenspieler) - Neutral/Impostor**
+    *   **Fähigkeit:** Kann anderen Spielern Worte in den Mund legen.
+    *   **UI:** Über ein spezielles Menü kann der Puppeteer einen Spieler und eine vorgefertigte Nachricht auswählen (z.B. "I saw them vent!").
+    *   **Effekt:** Im Meeting erscheint diese Nachricht so, als hätte der gewählte Spieler sie geschrieben.
+
+*   **Glitch - Neutral/Impostor**
+    *   **Fähigkeit:** Kann Schiffssysteme (Aufgaben) korrumpieren.
+    *   **Effekt:** Wenn ein Crewmate versucht, eine korrumpierte Aufgabe zu lösen, wird der Fortschritt **umgekehrt** (z.B. Download-Balken läuft rückwärts).
 
 ## Features
 
-- **Erweiterbares Rollen-System:** Die Architektur ist sauber, thread-sicher und für die einfache Integration neuer Rollen ausgelegt.
-- **Neue Rolle: Jester:**
-    - **Ziel:** Lass dich von den anderen Spielern aus dem Spiel wählen (exiled).
-    - **Gewinnbedingung:** Wenn der Jester während eines Meetings rausgewählt wird, gewinnt er sofort das Spiel.
 - **Robustes Netzwerkprotokoll:**
-    - **ACK & Retry-System:** Garantiert die Zustellung wichtiger Nachrichten auch bei schlechter Netzwerkverbindung.
-    - **Late-Join-Support:** Spieler, die einem laufenden Spiel beitreten, werden vollständig synchronisiert.
-    - **Versions-Validierung:** Stellt sicher, dass nur Spieler mit der gleichen Mod-Version zusammen spielen können.
-- **Benutzerdefinierte Spieleinstellungen:** In der Lobby kann der Host die Wahrscheinlichkeit für einen Jester einstellen. Diese wird sicher an alle Clients synchronisiert.
-- **UI-Integration:** Spieler mit der Jester-Rolle sehen ihren Namen in Pink und erhalten eine klare Anzeige ihrer Rolle auf dem HUD.
+    - **ACK & Retry-System:** Garantiert die Zustellung wichtiger Nachrichten (wie Rollenzuweisung) auch bei Packet Loss.
+    - **Late-Join-Support:** Spieler, die später beitreten, erhalten den korrekten Spielzustand.
+    - **Versions-Validierung:** Verhindert Versionskonflikte.
+- **Benutzerdefinierte UI:** Eigene Buttons und Menüs für spezielle Fähigkeiten (z.B. Witness-Testament, Puppeteer-Kontrolle).
 
 ## Installation (für Spieler)
 
 **Wichtiger Hinweis:** Alle Spieler in der Lobby müssen exakt die gleiche Version des Mods installiert haben.
 
-1.  **ZIP-Archiv herunterladen:** Lade die `MyCustomRolesMod-vX.X-Distribution.zip` von der [Release-Seite](https://github.com/example/mycustomrolesmod/releases) des Projekts herunter.
-2.  **In das Spielverzeichnis entpacken:** Entpacke den Inhalt der ZIP-Datei direkt in dein Among Us-Hauptverzeichnis (der Ordner, der die `Among Us.exe` enthält).
-3.  **Spiel starten:** Das war's! Starte das Spiel. Der Mod ist jetzt vollständig installiert.
+1.  **ZIP-Archiv herunterladen:** Lade die `MyCustomRolesMod-vX.X-Distribution.zip` von der Release-Seite herunter.
+2.  **In das Spielverzeichnis entpacken:** Entpacke den Inhalt direkt in dein Among Us-Hauptverzeichnis.
+3.  **Spiel starten:** Der Mod wird automatisch geladen.
 
 ## Konfiguration
 
-Nach dem ersten Start des Spiels mit dem Mod wird eine Konfigurationsdatei erstellt unter:
-`Among Us/BepInEx/config/com.example.mycustomrolesmod.paranoid.cfg`
-
-In dieser Datei können fortgeschrittene Einstellungen wie Netzwerk-Timeouts und Debug-Logging angepasst werden.
+Nach dem ersten Start wird die Datei `Among Us/BepInEx/config/com.example.mycustomrolesmod.paranoid.cfg` erstellt.
+Hier können die Wahrscheinlichkeiten für **Geist** und **Echo** angepasst werden (Standard: 100%). Die Wahrscheinlichkeit für den **Jester** kann direkt in der Lobby eingestellt werden.
 
 ## Build-Anleitung (für Entwickler)
 
@@ -53,9 +87,7 @@ Der einfachste und zuverlässigste Weg ist, eine Umgebungsvariable `AMONG_US_GAM
     ```
 
 **Option B: Automatische Erkennung (Fallback)**
-Wenn die `AMONG_US_GAME_PATH` Variable nicht gesetzt ist, versucht das Skript intelligent zu sein: Es sucht automatisch in den `bepinex_files`-Verzeichnissen nach den benötigten Spieldateien. In vielen Fällen findet es sie dort und kopiert sie für den Build-Prozess an die richtige Stelle. Sie müssen also eventuell nichts weiter tun.
-
-**Wichtiger Hinweis:** Die BepInEx-Distribution enthält nicht immer alle spiel-spezifischen Dateien (wie `Assembly-CSharp.dll`). Wenn das Skript diese Dateien nicht finden kann, müssen Sie Option A verwenden.
+Wenn die `AMONG_US_GAME_PATH` Variable nicht gesetzt ist, sucht das Skript automatisch in einem lokalen `bepinex_files`-Verzeichnis nach den benötigten Spieldateien.
 
 **Zusätzliche Abhängigkeit: BepInEx**
 Das Skript benötigt außerdem die BepInEx-Dateien, um das finale ZIP-Paket zu erstellen.
@@ -64,8 +96,8 @@ Das Skript benötigt außerdem die BepInEx-Dateien, um das finale ZIP-Paket zu e
 
 ### Schritt 2: Build ausführen
 
-Nachdem alle Abhängigkeiten erfüllt sind, führen Sie einfach das Build-Skript aus, um eine vollständige `Distribution.zip`-Datei zu erstellen:
+Nachdem alle Abhängigkeiten erfüllt sind, führen Sie das Build-Skript aus:
 ```cmd
 build.bat
 ```
-Das Skript wird Sie am Ende mit "pause" anhalten, damit Sie die Ausgabe in Ruhe lesen können.
+Das Skript erstellt eine `Distribution.zip`, die zur Installation verwendet werden kann.
