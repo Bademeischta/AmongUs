@@ -116,6 +116,51 @@ namespace MyCustomRolesMod.Networking
             Send(writer);
         }
 
+        public void SendSyncHiddenTruth(byte scribePlayerId, string truth)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcSyncHiddenTruth);
+            writer.Write(truth);
+            writer.EndMessage();
+            var scribeClient = AmongUsClient.Instance.GetClient(GameData.Instance.GetPlayerById(scribePlayerId)._clientId);
+            if (scribeClient != null)
+            {
+                SendTo(writer, scribeClient.Id);
+            }
+            else
+            {
+                writer.Recycle();
+            }
+        }
+
+        public void SendRevealTruth(string truth)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcRevealTruth);
+            writer.Write(truth);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendCmdEnterPhantomState(bool isEntering)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.CmdEnterPhantomState);
+            writer.Write(isEntering);
+            writer.EndMessage();
+            AmongUsClient.Instance.SendOrDisconnect(writer);
+        }
+
+        public void SendRpcSyncPhantomState(byte playerId, bool isPhantom)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcSyncPhantomState);
+            writer.Write(playerId);
+            writer.Write(isPhantom);
+            writer.EndMessage();
+            Send(writer);
+        }
+
         public void HandleMessage(RpcType rpcType, MessageReader reader, int senderId)
         {
             MessageReader payloadReader = null;
@@ -146,6 +191,10 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.SetWitnessTestimony: HandleSetWitnessTestimony(payloadReader); break;
                     case RpcType.SetPuppeteerForcedMessage: HandleSetPuppeteerForcedMessage(payloadReader); break;
                     case RpcType.SetGlitchCorruptedSystem: HandleSetGlitchCorruptedSystem(payloadReader); break;
+                    case RpcType.RpcSyncHiddenTruth: HandleRpcSyncHiddenTruth(payloadReader); break;
+                    case RpcType.RpcRevealTruth: HandleRpcRevealTruth(payloadReader); break;
+                    case RpcType.CmdEnterPhantomState: HandleCmdEnterPhantomState(payloadReader, senderId); break;
+                    case RpcType.RpcSyncPhantomState: HandleRpcSyncPhantomState(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -353,6 +402,39 @@ namespace MyCustomRolesMod.Networking
         {
             var systemId = reader.ReadInt32();
             GlitchManager.Instance.CorruptSystem(systemId);
+        }
+
+        private void HandleRpcSyncHiddenTruth(MessageReader reader)
+        {
+            var truth = reader.ReadString();
+            ScribeManager.Instance.SetHiddenTruth(truth);
+        }
+
+        private void HandleRpcRevealTruth(MessageReader reader)
+        {
+            var truth = reader.ReadString();
+            ScribeManager.Instance.SetHiddenTruth(truth);
+            ScribeManager.Instance.RevealTruth();
+        }
+
+        private void HandleCmdEnterPhantomState(MessageReader reader, int senderId)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var isEntering = reader.ReadBoolean();
+            var player = GameData.Instance.GetPlayerByClientId(senderId)?.Object;
+            if (player != null)
+            {
+                PhantomManager.Instance.SetPhantom(player.PlayerId, isEntering);
+                SendRpcSyncPhantomState(player.PlayerId, isEntering);
+            }
+        }
+
+        private void HandleRpcSyncPhantomState(MessageReader reader)
+        {
+            var playerId = reader.ReadByte();
+            var isPhantom = reader.ReadBoolean();
+            PhantomManager.Instance.SetPhantom(playerId, isPhantom);
         }
 
         private class PendingRpc
