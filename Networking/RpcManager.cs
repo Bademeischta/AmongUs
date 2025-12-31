@@ -97,6 +97,34 @@ namespace MyCustomRolesMod.Networking
             Send(writer);
         }
 
+        public void SendPhantomKill(byte targetId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.CmdPhantomKill);
+            writer.Write(targetId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendSetImprint(Vector2 location)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.CmdSetImprint);
+            writer.Write(location.x);
+            writer.Write(location.y);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendAuditPlayer(byte playerId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.CmdAuditPlayer);
+            writer.Write(playerId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
         public void SendSetPuppeteerForcedMessage(byte playerId, string message)
         {
             var writer = MessageWriter.Get(SendOption.Reliable);
@@ -146,6 +174,12 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.SetWitnessTestimony: HandleSetWitnessTestimony(payloadReader); break;
                     case RpcType.SetPuppeteerForcedMessage: HandleSetPuppeteerForcedMessage(payloadReader); break;
                     case RpcType.SetGlitchCorruptedSystem: HandleSetGlitchCorruptedSystem(payloadReader); break;
+                    case RpcType.CmdAuditPlayer: HandleCmdAuditPlayer(payloadReader); break;
+                    case RpcType.RpcAuditPlayer: HandleRpcAuditPlayer(payloadReader); break;
+                    case RpcType.CmdSetImprint: HandleCmdSetImprint(payloadReader); break;
+                    case RpcType.RpcSetImprint: HandleRpcSetImprint(payloadReader); break;
+                    case RpcType.CmdPhantomKill: HandleCmdPhantomKill(payloadReader, senderId); break;
+                    case RpcType.RpcPhantomKill: HandleRpcPhantomKill(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -353,6 +387,101 @@ namespace MyCustomRolesMod.Networking
         {
             var systemId = reader.ReadInt32();
             GlitchManager.Instance.CorruptSystem(systemId);
+        }
+
+        private void HandleCmdAuditPlayer(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var playerId = reader.ReadByte();
+            var player = GameData.Instance.GetPlayerById(playerId)?.Object;
+            if (player != null)
+            {
+                AuditorManager.Instance.SetAuditedPlayer(player);
+                var writer = MessageWriter.Get(SendOption.Reliable);
+                writer.StartMessage((byte)RpcType.RpcAuditPlayer);
+                writer.Write(playerId);
+                writer.EndMessage();
+                Send(writer);
+            }
+        }
+
+        private void HandleRpcAuditPlayer(MessageReader reader)
+        {
+            var playerId = reader.ReadByte();
+            var player = GameData.Instance.GetPlayerById(playerId)?.Object;
+            if (player != null)
+            {
+                AuditorManager.Instance.SetAuditedPlayer(player);
+            }
+        }
+
+        private void HandleCmdSetImprint(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var x = reader.ReadSingle();
+            var y = reader.ReadSingle();
+            var location = new Vector2(x, y);
+
+            PhantomManager.Instance.SetImprintLocation(location);
+
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcSetImprint);
+            writer.Write(x);
+            writer.Write(y);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        private void HandleRpcSetImprint(MessageReader reader)
+        {
+            var x = reader.ReadSingle();
+            var y = reader.ReadSingle();
+            var location = new Vector2(x, y);
+            PhantomManager.Instance.SetImprintLocation(location);
+        }
+
+        private void HandleCmdPhantomKill(MessageReader reader, int senderId)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var targetId = reader.ReadByte();
+            var target = GameData.Instance.GetPlayerById(targetId)?.Object;
+            if (target == null) return;
+
+            var killer = GameData.Instance.GetPlayerById((byte)senderId)?.Object;
+            if (killer == null) return;
+
+            var imprintLocation = PhantomManager.Instance.GetImprintLocation();
+            if (imprintLocation == null) return;
+
+            killer.KillPlayer(target);
+
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcPhantomKill);
+            writer.Write(targetId);
+            writer.Write(imprintLocation.Value.x);
+            writer.Write(imprintLocation.Value.y);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        private void HandleRpcPhantomKill(MessageReader reader)
+        {
+            var targetId = reader.ReadByte();
+            var target = GameData.Instance.GetPlayerById(targetId)?.Object;
+            if (target == null) return;
+
+            var x = reader.ReadSingle();
+            var y = reader.ReadSingle();
+            var location = new Vector2(x, y);
+
+            var body = Object.FindObjectsOfType<DeadBody>().FirstOrDefault(b => b.ParentId == targetId);
+            if (body != null)
+            {
+                body.transform.position = location;
+            }
         }
 
         private class PendingRpc

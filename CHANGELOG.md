@@ -2,6 +2,14 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [5.0.0] - 2024-08-02
+
+### Hinzugefügt (Added)
+- **Neue Crewmate-Rolle: Auditor**
+    - Kann einen Spieler "auditieren", um einen Schnappschuss seiner Daten (Position, Aufgaben, etc.) zu einem bestimmten Zeitpunkt zu erstellen.
+- **Neue Impostor-Rolle: Phantom**
+    - Kann einen Ort "prägen" und später einen Kill aus der Ferne durchführen, wobei die Leiche am geprägten Ort erscheint.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)
