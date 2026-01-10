@@ -23,7 +23,9 @@ namespace MyCustomRolesMod.Core
         Geist,
         Witness,
         Puppeteer,
-        Glitch
+        Glitch,
+        Auditor,
+        Propagator
     }
 
     public class JesterRole : BaseRole
@@ -80,5 +82,23 @@ namespace MyCustomRolesMod.Core
 
 
         public GlitchRole(PlayerControl player) : base(player) { }
+    }
+
+    public class AuditorRole : BaseRole
+    {
+        public override string Name => "Auditor";
+        public override Color Color => new Color(0.8f, 0.6f, 0.2f); // Orange
+        public override RoleType RoleType => RoleType.Auditor;
+
+        public AuditorRole(PlayerControl player) : base(player) { }
+    }
+
+    public class PropagatorRole : BaseRole
+    {
+        public override string Name => "Propagator";
+        public override Color Color => new Color(0.2f, 0.8f, 0.2f); // Dark Green
+        public override RoleType RoleType => RoleType.Propagator;
+
+        public PropagatorRole(PlayerControl player) : base(player) { }
     }
 }

@@ -12,6 +12,8 @@ namespace MyCustomRolesMod.Patches
             PuppeteerManager.Instance.ClearAllForcedMessages();
             GlitchManager.Instance.ClearAllCorruptedSystems();
             GlitchPatch.ClearCorruptibleSystems();
+            AuditorManager.Instance.ClearTasks();
+            PropagatorManager.Instance.Cure();
         }
     }
 }

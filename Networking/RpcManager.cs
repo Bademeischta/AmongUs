@@ -116,6 +116,34 @@ namespace MyCustomRolesMod.Networking
             Send(writer);
         }
 
+        public void SendAuditTask(Vector2 location)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.CmdAuditTask);
+            writer.Write(location.x);
+            writer.Write(location.y);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendFramePlayer(byte targetId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.CmdFramePlayer);
+            writer.Write(targetId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendInfectPlayer(byte targetId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcInfectPlayer);
+            writer.Write(targetId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
         public void HandleMessage(RpcType rpcType, MessageReader reader, int senderId)
         {
             MessageReader payloadReader = null;
@@ -146,6 +174,13 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.SetWitnessTestimony: HandleSetWitnessTestimony(payloadReader); break;
                     case RpcType.SetPuppeteerForcedMessage: HandleSetPuppeteerForcedMessage(payloadReader); break;
                     case RpcType.SetGlitchCorruptedSystem: HandleSetGlitchCorruptedSystem(payloadReader); break;
+                    case RpcType.CmdAuditTask: HandleCmdAuditTask(payloadReader, senderId); break;
+                    case RpcType.RpcAuditResultLegitimate: HandleRpcAuditResultLegitimate(); break;
+                    case RpcType.RpcAuditResultImpostor: HandleRpcAuditResultImpostor(payloadReader); break;
+                    case RpcType.CmdFramePlayer: HandleCmdFramePlayer(payloadReader); break;
+                    case RpcType.RpcInfectPlayer: HandleRpcInfectPlayer(payloadReader); break;
+                    case RpcType.RpcSyncInfectedPlayer: HandleRpcSyncInfectedPlayer(payloadReader); break;
+                    case RpcType.RpcFramedPlayerToAuditor: HandleRpcFramedPlayerToAuditor(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -353,6 +388,118 @@ namespace MyCustomRolesMod.Networking
         {
             var systemId = reader.ReadInt32();
             GlitchManager.Instance.CorruptSystem(systemId);
+        }
+
+        private void HandleCmdAuditTask(MessageReader reader, int senderId)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var location = new Vector2(reader.ReadFloat(), reader.ReadFloat());
+            if (AuditorManager.Instance.IsTaskAuditable(location, out var completerId, out var wasImpostorTask))
+            {
+                if (wasImpostorTask)
+                {
+                    var writer = MessageWriter.Get(SendOption.Reliable);
+                    var completerPlayer = GameData.Instance.GetPlayerById(completerId)?.Object;
+                    if (completerPlayer == null)
+                    {
+                        // Player disconnected, treat as legitimate.
+                        var legitimateWriter = MessageWriter.Get(SendOption.Reliable);
+                        legitimateWriter.StartMessage((byte)RpcType.RpcAuditResultLegitimate);
+                        legitimateWriter.EndMessage();
+                        SendTo(legitimateWriter, senderId);
+                        return;
+                    }
+                    writer.StartMessage((byte)RpcType.RpcAuditResultImpostor);
+                    writer.Write(completerId);
+                    writer.EndMessage();
+                    SendTo(writer, completerPlayer.OwnerId);
+                }
+                else
+                {
+                    var writer = MessageWriter.Get(SendOption.Reliable);
+                    writer.StartMessage((byte)RpcType.RpcAuditResultLegitimate);
+                    writer.EndMessage();
+                    SendTo(writer, senderId);
+                }
+            }
+        }
+
+        private void HandleRpcAuditResultLegitimate()
+        {
+            HudManager.Instance.ShowMessage("Task was legitimate.");
+        }
+
+        private void HandleRpcAuditResultImpostor(MessageReader reader)
+        {
+            var players = new List<PlayerControl>();
+            foreach (var player in PlayerControl.AllPlayerControls)
+            {
+                if (!player.Data.IsImpostor && !player.Data.IsDead)
+                {
+                    players.Add(player);
+                }
+            }
+            FramingManager.Instance.ShowFramingUI(players);
+        }
+
+        private void HandleCmdFramePlayer(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var targetId = reader.ReadByte();
+
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcFramedPlayerToAuditor);
+            writer.Write(targetId);
+            writer.EndMessage();
+
+            byte auditorId = byte.MaxValue;
+            foreach (var role in RoleManager.Instance.GetAllRoles())
+            {
+                if (role.Value == RoleType.Auditor)
+                {
+                    auditorId = role.Key;
+                    break;
+                }
+            }
+
+            if (auditorId != byte.MaxValue)
+            {
+                SendTo(writer, GameData.Instance.GetPlayerById(auditorId).Object.OwnerId);
+            }
+            else
+            {
+                writer.Recycle();
+            }
+        }
+
+        private void HandleRpcInfectPlayer(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var targetId = reader.ReadByte();
+            PropagatorManager.Instance.Infect(targetId);
+
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcSyncInfectedPlayer);
+            writer.Write(targetId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        private void HandleRpcSyncInfectedPlayer(MessageReader reader)
+        {
+            if (AmongUsClient.Instance.AmHost) return;
+            var targetId = reader.ReadByte();
+            PropagatorManager.Instance.Infect(targetId);
+        }
+
+        private void HandleRpcFramedPlayerToAuditor(MessageReader reader)
+        {
+            var framedPlayerId = reader.ReadByte();
+            var framedPlayerName = GameData.Instance.GetPlayerById(framedPlayerId)?.PlayerName ?? "Unknown";
+            HudManager.Instance.ShowMessage($"Task was faked. Evidence suggests {framedPlayerName} is the Impostor.");
         }
 
         private class PendingRpc
