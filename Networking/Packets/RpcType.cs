@@ -20,5 +20,12 @@ namespace MyCustomRolesMod.Networking.Packets
         SetWitnessTestimony = 142,
         SetPuppeteerForcedMessage = 143,
         SetGlitchCorruptedSystem = 144,
+        CmdAuditTask,
+        RpcAuditResultLegitimate,
+        RpcAuditResultImpostor,
+        CmdFramePlayer,
+        RpcInfectPlayer,
+        RpcSyncInfectedPlayer,
+        RpcFramedPlayerToAuditor,
     }
 }
