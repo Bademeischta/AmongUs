@@ -2,6 +2,11 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [4.1.0] - 2024-08-02
+
+### Hinzugefügt (Added)
+- **Neue Rollenkonzepte:** Zwei neue Rollenkonzepte wurden entworfen und dokumentiert: 'The Chronicler' (Crewmate) und 'The Parasite' (Impostor).
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)
