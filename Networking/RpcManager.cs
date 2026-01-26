@@ -146,6 +146,12 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.SetWitnessTestimony: HandleSetWitnessTestimony(payloadReader); break;
                     case RpcType.SetPuppeteerForcedMessage: HandleSetPuppeteerForcedMessage(payloadReader); break;
                     case RpcType.SetGlitchCorruptedSystem: HandleSetGlitchCorruptedSystem(payloadReader); break;
+                    case RpcType.CmdVerifyFact: HandleCmdVerifyFact(payloadReader); break;
+                    case RpcType.RpcFactVerificationResult: HandleRpcFactVerificationResult(payloadReader); break;
+                    case RpcType.CmdRecordFact: HandleCmdRecordFact(payloadReader); break;
+                    case RpcType.CmdQuantumCollapse: HandleCmdQuantumCollapse(payloadReader); break;
+                    case RpcType.CmdQuantumStateChange: HandleCmdQuantumStateChange(payloadReader); break;
+                    case RpcType.RpcQuantumStateChange: HandleRpcQuantumStateChange(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -353,6 +359,74 @@ namespace MyCustomRolesMod.Networking
         {
             var systemId = reader.ReadInt32();
             GlitchManager.Instance.CorruptSystem(systemId);
+        }
+
+        private void HandleCmdVerifyFact(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var statement = reader.ReadString();
+            var result = ChroniclerManager.Instance.VerifyFact(statement);
+
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcFactVerificationResult);
+            writer.Write(statement);
+            writer.Write(result);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        private void HandleRpcFactVerificationResult(MessageReader reader)
+        {
+            var statement = reader.ReadString();
+            var result = reader.ReadBoolean();
+            var message = $"Chronicler's Ledger: The statement \"{statement}\" is {(result ? "TRUE" : "FALSE")}.";
+
+            if (HudManager.Instance)
+            {
+                HudManager.Instance.Chat.AddChat(PlayerControl.LocalPlayer, message);
+            }
+        }
+
+        private void HandleCmdRecordFact(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            var fact = reader.ReadString();
+            ChroniclerManager.Instance.AddFact(fact);
+        }
+
+        private void HandleCmdQuantumCollapse(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            var quantumId = reader.ReadByte();
+            var targetId = reader.ReadByte();
+
+            var quantumPlayer = GameData.Instance.GetPlayerById(quantumId)?.Object;
+            var targetPlayer = GameData.Instance.GetPlayerById(targetId)?.Object;
+
+            if (quantumPlayer != null && targetPlayer != null && !targetPlayer.Data.IsDead)
+            {
+                quantumPlayer.RpcMurderPlayer(targetPlayer);
+            }
+        }
+
+        private void HandleCmdQuantumStateChange(MessageReader reader)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+            var isObserved = reader.ReadBoolean();
+            QuantumManager.Instance.SetObservedStatus(isObserved);
+
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcQuantumStateChange);
+            writer.Write(isObserved);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        private void HandleRpcQuantumStateChange(MessageReader reader)
+        {
+            var isObserved = reader.ReadBoolean();
+            QuantumManager.Instance.SetObservedStatus(isObserved);
         }
 
         private class PendingRpc

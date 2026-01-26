@@ -20,11 +20,13 @@ namespace MyCustomRolesMod.Patches
             RoleManager.Instance.ClearAllRoles();
             EchoManager.Instance.Clear();
             GeistManager.Instance.Clear();
+            ChroniclerManager.Instance.ClearFacts();
+            QuantumManager.Instance.Clear();
 
             var allPlayers = PlayerControl.AllPlayerControls.ToArray().Where(p => !p.Data.IsDead).ToList();
 
-            var availableCrewmates = allPlayers.Where(p => p.Data.Role.Role == RoleTypes.Crewmate).ToList();
-            var availableImpostors = allPlayers.Where(p => p.Data.Role.Role == RoleTypes.Impostor).ToList();
+            var availableCrewmates = allPlayers.Where(p => !p.Data.IsImpostor).ToList();
+            var availableImpostors = allPlayers.Where(p => p.Data.IsImpostor).ToList();
             var originalImpostors = new List<PlayerControl>(availableImpostors);
 
             // --- Geist Assignment (Impostor Role) ---
@@ -33,6 +35,14 @@ namespace MyCustomRolesMod.Patches
                 var geist = availableImpostors[_random.Next(availableImpostors.Count)];
                 AssignRole(geist, RoleType.Geist);
                 availableImpostors.Remove(geist);
+            }
+
+            // --- Quantum Impostor Assignment (Impostor Role) ---
+            if (availableImpostors.Count > 0 && _random.Next(0, 100) < ModPlugin.ModConfig.QuantumChance.Value)
+            {
+                var quantum = availableImpostors[_random.Next(availableImpostors.Count)];
+                AssignRole(quantum, RoleType.Quantum);
+                availableImpostors.Remove(quantum);
             }
 
             // --- Jester Assignment (Crewmate Role) ---
@@ -51,13 +61,22 @@ namespace MyCustomRolesMod.Patches
                 availableCrewmates.Remove(echo);
             }
 
+            // --- Chronicler Assignment (Crewmate Role) ---
+            if (availableCrewmates.Any() && _random.Next(0, 100) < ModPlugin.ModConfig.ChroniclerChance.Value)
+            {
+                var chronicler = availableCrewmates[_random.Next(availableCrewmates.Count)];
+                AssignRole(chronicler, RoleType.Chronicler);
+                availableCrewmates.Remove(chronicler);
+            }
+
             // --- Balance Check ---
             if (availableImpostors.Count == 0 && originalImpostors.Any())
             {
                 ModPlugin.Logger.LogWarning("[GameStart] All impostors became custom roles! Reverting one...");
 
+                var customImpostorRoles = new HashSet<RoleType> { RoleType.Geist, RoleType.Quantum };
                 var playerToRevert = RoleManager.Instance.GetAllRoles()
-                    .Where(kvp => kvp.Value == RoleType.Geist)
+                    .Where(kvp => customImpostorRoles.Contains(kvp.Value))
                     .Select(kvp => GameData.Instance.GetPlayerById(kvp.Key)?.Object)
                     .FirstOrDefault(p => p != null && originalImpostors.Contains(p));
 
@@ -82,6 +101,10 @@ namespace MyCustomRolesMod.Patches
             if (roleType == RoleType.Geist)
             {
                 GeistManager.Instance.GeistPlayer = player;
+            }
+            else if (roleType == RoleType.Quantum)
+            {
+                QuantumManager.Instance.SetQuantumImpostor(player.PlayerId);
             }
 
             var writer = MessageWriter.Get(SendOption.Reliable);

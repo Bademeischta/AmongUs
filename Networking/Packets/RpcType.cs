@@ -20,5 +20,13 @@ namespace MyCustomRolesMod.Networking.Packets
         SetWitnessTestimony = 142,
         SetPuppeteerForcedMessage = 143,
         SetGlitchCorruptedSystem = 144,
+
+        CmdVerifyFact = 145,
+        RpcFactVerificationResult = 146,
+
+        CmdRecordFact = 147,
+        CmdQuantumCollapse = 148,
+        CmdQuantumStateChange = 149,
+        RpcQuantumStateChange = 150,
     }
 }

@@ -1,6 +1,7 @@
 using HarmonyLib;
 using MyCustomRolesMod.Core;
 using Hazel;
+using MyCustomRolesMod.Networking.Packets;
 
 namespace MyCustomRolesMod.Patches
 {
@@ -38,6 +39,23 @@ namespace MyCustomRolesMod.Patches
                     var writer = MessageWriter.Get(SendOption.Reliable);
                     writer.StartMessage((byte)RpcType.SetInfectedWord);
                     writer.Write(word);
+                    writer.EndMessage();
+                    AmongUsClient.Instance.SendOrDisconnect(writer);
+                    writer.Recycle();
+                }
+                __instance.TextArea.Clear();
+                return false; // Block original method
+            }
+
+            // Check for /verify command for Chronicler
+            if (role?.RoleType == RoleType.Chronicler && text.StartsWith("/verify "))
+            {
+                var statement = text.Substring(8).Trim();
+                if (!string.IsNullOrWhiteSpace(statement))
+                {
+                    var writer = MessageWriter.Get(SendOption.Reliable);
+                    writer.StartMessage((byte)RpcType.CmdVerifyFact);
+                    writer.Write(statement);
                     writer.EndMessage();
                     AmongUsClient.Instance.SendOrDisconnect(writer);
                     writer.Recycle();
