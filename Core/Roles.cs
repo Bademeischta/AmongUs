@@ -23,7 +23,9 @@ namespace MyCustomRolesMod.Core
         Geist,
         Witness,
         Puppeteer,
-        Glitch
+        Glitch,
+        Chronicler,
+        Quantum
     }
 
     public class JesterRole : BaseRole
@@ -80,5 +82,23 @@ namespace MyCustomRolesMod.Core
 
 
         public GlitchRole(PlayerControl player) : base(player) { }
+    }
+
+    public class ChroniclerRole : BaseRole
+    {
+        public override string Name => "Chronicler";
+        public override Color Color => new Color(0.8f, 0.6f, 0.2f); // A parchment-like brown/orange
+        public override RoleType RoleType => RoleType.Chronicler;
+
+        public ChroniclerRole(PlayerControl player) : base(player) { }
+    }
+
+    public class QuantumRole : BaseRole
+    {
+        public override string Name => "Quantum";
+        public override Color Color => new Color(0.1f, 0.1f, 0.3f); // A deep, dark blue
+        public override RoleType RoleType => RoleType.Quantum;
+
+        public QuantumRole(PlayerControl player) : base(player) { }
     }
 }
