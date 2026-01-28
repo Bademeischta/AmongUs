@@ -24,6 +24,9 @@ namespace MyCustomRolesMod
             // Register RpcManager to receive Unity's Update events.
             AddComponent<RpcManager>();
 
+            // Register ResidueChecker to receive Unity's FixedUpdate events.
+            AddComponent<Core.ResidueChecker>();
+
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} loaded.");
         }
