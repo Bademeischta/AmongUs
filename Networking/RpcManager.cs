@@ -116,6 +116,62 @@ namespace MyCustomRolesMod.Networking
             Send(writer);
         }
 
+        public void SendSetAnchorLinkedPlayers(byte player1, byte player2)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.SetAnchorLinkedPlayers);
+            writer.Write(player1);
+            writer.Write(player2);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendRpcRevealAnchorLink()
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcRevealAnchorLink);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendCmdResidueKill(byte victimId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.CmdResidueKill);
+            writer.Write(victimId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendRpcSpawnResidueBody(byte victimId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcSpawnResidueBody);
+            writer.Write(victimId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendRpcSetResidueState(byte victimId, bool isResidue)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcSetResidueState);
+            writer.Write(victimId);
+            writer.Write(isResidue);
+            writer.EndMessage();
+            Send(writer);
+        }
+
+        public void SendRpcSetResidueState(byte victimId, bool isResidue)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.RpcSetResidueState);
+            writer.Write(victimId);
+            writer.Write(isResidue);
+            writer.EndMessage();
+            Send(writer);
+        }
+
         public void HandleMessage(RpcType rpcType, MessageReader reader, int senderId)
         {
             MessageReader payloadReader = null;
@@ -146,6 +202,12 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.SetWitnessTestimony: HandleSetWitnessTestimony(payloadReader); break;
                     case RpcType.SetPuppeteerForcedMessage: HandleSetPuppeteerForcedMessage(payloadReader); break;
                     case RpcType.SetGlitchCorruptedSystem: HandleSetGlitchCorruptedSystem(payloadReader); break;
+                    case RpcType.SetAnchorLinkedPlayers: HandleSetAnchorLinkedPlayers(payloadReader); break;
+                    case RpcType.RpcRevealAnchorLink: HandleRpcRevealAnchorLink(payloadReader); break;
+                    case RpcType.CmdResidueKill: HandleCmdResidueKill(payloadReader, senderId); break;
+                    case RpcType.RpcSpawnResidueBody: HandleRpcSpawnResidueBody(payloadReader); break;
+                    case RpcType.RpcSetResidueState: HandleRpcSetResidueState(payloadReader); break;
+                    case RpcType.RpcSetResidueState: HandleRpcSetResidueState(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -353,6 +415,54 @@ namespace MyCustomRolesMod.Networking
         {
             var systemId = reader.ReadInt32();
             GlitchManager.Instance.CorruptSystem(systemId);
+        }
+
+        private void HandleSetAnchorLinkedPlayers(MessageReader reader)
+        {
+            var player1 = reader.ReadByte();
+            var player2 = reader.ReadByte();
+            AnchorManager.Instance.SetLinkedPlayers(player1, player2);
+        }
+
+        private void HandleRpcRevealAnchorLink(MessageReader reader)
+        {
+            AnchorManager.Instance.RevealLink();
+        }
+
+        private void HandleCmdResidueKill(MessageReader reader, int senderId)
+        {
+            if (!AmongUsClient.Instance.AmHost) return;
+
+            var victimId = reader.ReadByte();
+            ResidueManager.Instance.AddResidue(victimId, ModPlugin.ModConfig.ResidueDuration.Value);
+
+            SendRpcSetResidueState(victimId, true);
+        }
+
+        private void HandleRpcSpawnResidueBody(MessageReader reader)
+        {
+            var victimId = reader.ReadByte();
+            var player = GameData.Instance.GetPlayerById(victimId)?.Object;
+            if (player != null && player.Data.IsDead)
+            {
+                var body = Object.Instantiate(ShipStatus.Instance.KillBodyPrefab);
+                body.ParentId = victimId;
+                body.transform.position = player.transform.position;
+            }
+        }
+
+        private void HandleRpcSetResidueState(MessageReader reader)
+        {
+            var victimId = reader.ReadByte();
+            var isResidue = reader.ReadBoolean();
+            if (isResidue)
+            {
+                ResidueManager.Instance.AddResidue(victimId, ModPlugin.ModConfig.ResidueDuration.Value);
+            }
+            else
+            {
+                ResidueManager.Instance.RemoveResidue(victimId);
+            }
         }
 
         private class PendingRpc

@@ -32,6 +32,8 @@ namespace MyCustomRolesMod.Core
                     RoleType.Witness => new WitnessRole(player),
                     RoleType.Puppeteer => new PuppeteerRole(player),
                     RoleType.Glitch => new GlitchRole(player),
+                    RoleType.Anchor => new AnchorRole(player),
+                    RoleType.Residue => new ResidueRole(player),
                     _ => null
                 };
 

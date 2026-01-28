@@ -20,5 +20,11 @@ namespace MyCustomRolesMod.Networking.Packets
         SetWitnessTestimony = 142,
         SetPuppeteerForcedMessage = 143,
         SetGlitchCorruptedSystem = 144,
+
+        SetAnchorLinkedPlayers = 145,
+        RpcRevealAnchorLink = 146,
+        CmdResidueKill = 147,
+        RpcSpawnResidueBody = 148,
+        RpcSetResidueState = 149,
     }
 }

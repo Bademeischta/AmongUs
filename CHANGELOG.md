@@ -2,6 +2,22 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [5.0.0] - 2024-08-01
+
+### Hinzugefügt (Added)
+- **Neue Crewmate-Rolle: Anchor.** Zwingt zu einer strategischen Entscheidung, indem perfekte Informationen gegen die Stimme für einen von zwei Spielern abgewogen werden müssen.
+- **Neue Impostor-Rolle: Residue.** Manipuliert die Zeitlinie, indem ein "Geist" des Opfers für kurze Zeit nach dem Tod bestehen bleibt, was Alibis und Zeitpunkte in Frage stellt.
+
+### Behoben (Fixed)
+- **Kritischer `NullReferenceException`-Fehler in der Anchor-Rolle behoben.** Der `_collider` wurde nicht korrekt initialisiert, was die Fähigkeit der Rolle unbrauchbar machte.
+- **Fehlerhaftes Netzwerk-Modell der Residue-Rolle korrigiert.** Die Zustands-Synchronisation ist nun Host-autoritär, um sicherzustellen, dass alle Clients den "Residue"-Effekt korrekt sehen.
+- **Fehlende Spiellogik der Residue-Rolle implementiert.** Das Erscheinen des Leichnams nach dem "Residue"-Effekt wurde hinzugefügt.
+
+### Behoben (Fixed)
+- **Kritischer `NullReferenceException`-Fehler in der Anchor-Rolle behoben.** Der `_collider` wurde nicht korrekt initialisiert, was die Fähigkeit der Rolle unbrauchbar machte.
+- **Fehlerhaftes Netzwerk-Modell der Residue-Rolle korrigiert.** Die Zustands-Synchronisation ist nun Host-autoritär, um sicherzustellen, dass alle Clients den "Residue"-Effekt korrekt sehen.
+- **Fehlende Spiellogik der Residue-Rolle implementiert.** Das Erscheinen des Leichnams nach dem "Residue"-Effekt wurde hinzugefügt.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)
