@@ -2,6 +2,11 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [4.1.0] - 2024-08-15
+
+### Hinzugefügt (Added)
+- **Innovative Rollendesigns:** Designkonzepte für zwei neue Rollen ('The Parity-Link' und 'The Sunk-Cost') wurden hinzugefügt. Diese nutzen Mechanismen der Quantenverschränkung und Verhaltensökonomie. Siehe `Core/ProposedRoles.md`.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)
