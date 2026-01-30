@@ -45,6 +45,15 @@ Diese Rollen sind bereits technisch implementiert (inklusive UI und Networking),
     *   **Fähigkeit:** Kann Schiffssysteme (Aufgaben) korrumpieren.
     *   **Effekt:** Wenn ein Crewmate versucht, eine korrumpierte Aufgabe zu lösen, wird der Fortschritt **umgekehrt** (z.B. Download-Balken läuft rückwärts).
 
+## Zukünftige Rollen-Konzepte
+
+Wir erforschen ständig neue, bahnbrechende Mechaniken, um die soziale Deduktion in Among Us zu vertiefen. Die folgenden Konzepte wurden von einer spezialisierten Game-Design-KI entworfen:
+
+*   **The Parity-Link (Crewmate):** Nutzt "State-Entanglement", um die Beziehung zwischen zwei Spielern zu analysieren.
+*   **The Sunk-Cost (Impostor):** Erzeugt eine "Cognitive Debt" bei Crewmates, die durch Zusammenarbeit Vorteile erhalten, aber gleichzeitig den Impostor stärken.
+
+Detaillierte Beschreibungen finden Sie in [Core/ProposedRoles.md](Core/ProposedRoles.md).
+
 ## Features
 
 - **Robustes Netzwerkprotokoll:**
