@@ -2,6 +2,11 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [Unreleased]
+
+### Hinzugefügt (Added)
+- **Rollenkonzepte:** Die Dokumentation für zwei neue, innovative Rollen (**Auditor** und **Schismatic**) wurde in `Core/ProposedRoles.md` hinzugefügt. Diese Rollen basieren auf physikalischen und psychologischen Konzepten wie Thermodynamik und Realitätsfrakturen.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)
