@@ -2,6 +2,12 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [Unreleased]
+
+### Hinzugefügt (Added)
+- **Konzeptionelle Rollen-Roadmap:** Neue Datei `Core/ProposedRoles.md` hinzugefügt, die innovative Designkonzepte für zukünftige Rollen (**The Relic** und **The Paradox**) dokumentiert. Diese folgen einem strengen "MANDATORY THINKING PHASE" Prozess für maximale Originalität.
+- **README-Aktualisierung:** Link zur neuen Rollen-Roadmap hinzugefügt.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)

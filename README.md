@@ -45,6 +45,10 @@ Diese Rollen sind bereits technisch implementiert (inklusive UI und Networking),
     *   **Fähigkeit:** Kann Schiffssysteme (Aufgaben) korrumpieren.
     *   **Effekt:** Wenn ein Crewmate versucht, eine korrumpierte Aufgabe zu lösen, wird der Fortschritt **umgekehrt** (z.B. Download-Balken läuft rückwärts).
 
+### Zukünftige Konzepte (Roadmap)
+
+Weitere innovative Rollenkonzepte, die sich aktuell in der Designphase befinden, sind in der Datei [Core/ProposedRoles.md](Core/ProposedRoles.md) dokumentiert. Dazu gehören unter anderem **The Relic** und **The Paradox**.
+
 ## Features
 
 - **Robustes Netzwerkprotokoll:**
