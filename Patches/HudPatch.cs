@@ -57,7 +57,14 @@ namespace MyCustomRolesMod.Patches
                 {
                     __instance.nameText.color = role.Color;
                     if (_roleText != null)
-                        _roleText.text = $"Rolle: <color=#{ColorUtility.ToHtmlStringRGB(role.Color)}>{role.Name}</color>";
+                    {
+                        string extra = "";
+                        if (!string.IsNullOrEmpty(DendrochronologistPatch.TempMessage) && Time.time - DendrochronologistPatch.LastMessageTime < 5.0f)
+                        {
+                            extra = $"\n<size=80%>{DendrochronologistPatch.TempMessage}</size>";
+                        }
+                        _roleText.text = $"Rolle: <color=#{ColorUtility.ToHtmlStringRGB(role.Color)}>{role.Name}</color>{extra}";
+                    }
                 }
                 else
                 {

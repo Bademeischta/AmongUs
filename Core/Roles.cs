@@ -23,7 +23,9 @@ namespace MyCustomRolesMod.Core
         Geist,
         Witness,
         Puppeteer,
-        Glitch
+        Glitch,
+        Dendrochronologist,
+        Solipsist
     }
 
     public class JesterRole : BaseRole
@@ -80,5 +82,23 @@ namespace MyCustomRolesMod.Core
 
 
         public GlitchRole(PlayerControl player) : base(player) { }
+    }
+
+    public class DendrochronologistRole : BaseRole
+    {
+        public override string Name => "Dendrochronologist";
+        public override Color Color => new Color(0.6f, 0.4f, 0.2f); // Brown
+        public override RoleType RoleType => RoleType.Dendrochronologist;
+
+        public DendrochronologistRole(PlayerControl player) : base(player) { }
+    }
+
+    public class SolipsistRole : BaseRole
+    {
+        public override string Name => "Solipsist";
+        public override Color Color => new Color(1f, 0.5f, 0f); // Orange
+        public override RoleType RoleType => RoleType.Solipsist;
+
+        public SolipsistRole(PlayerControl player) : base(player) { }
     }
 }

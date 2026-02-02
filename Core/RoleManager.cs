@@ -32,6 +32,8 @@ namespace MyCustomRolesMod.Core
                     RoleType.Witness => new WitnessRole(player),
                     RoleType.Puppeteer => new PuppeteerRole(player),
                     RoleType.Glitch => new GlitchRole(player),
+                    RoleType.Dendrochronologist => new DendrochronologistRole(player),
+                    RoleType.Solipsist => new SolipsistRole(player),
                     _ => null
                 };
 

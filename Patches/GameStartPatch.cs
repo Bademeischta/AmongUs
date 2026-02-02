@@ -20,6 +20,8 @@ namespace MyCustomRolesMod.Patches
             RoleManager.Instance.ClearAllRoles();
             EchoManager.Instance.Clear();
             GeistManager.Instance.Clear();
+            DendrochronologistManager.Instance.Clear();
+            SolipsistManager.Instance.Clear();
 
             var allPlayers = PlayerControl.AllPlayerControls.ToArray().Where(p => !p.Data.IsDead).ToList();
 
@@ -33,6 +35,14 @@ namespace MyCustomRolesMod.Patches
                 var geist = availableImpostors[_random.Next(availableImpostors.Count)];
                 AssignRole(geist, RoleType.Geist);
                 availableImpostors.Remove(geist);
+            }
+
+            // --- Solipsist Assignment (Impostor Role) ---
+            if (availableImpostors.Count > 1 && _random.Next(0, 100) < ModPlugin.ModConfig.SolipsistChance.Value)
+            {
+                var solipsist = availableImpostors[_random.Next(availableImpostors.Count)];
+                AssignRole(solipsist, RoleType.Solipsist);
+                availableImpostors.Remove(solipsist);
             }
 
             // --- Jester Assignment (Crewmate Role) ---
@@ -49,6 +59,14 @@ namespace MyCustomRolesMod.Patches
                 var echo = availableCrewmates[_random.Next(availableCrewmates.Count)];
                 AssignRole(echo, RoleType.Echo);
                 availableCrewmates.Remove(echo);
+            }
+
+            // --- Dendrochronologist Assignment (Crewmate Role) ---
+            if (availableCrewmates.Any() && _random.Next(0, 100) < ModPlugin.ModConfig.DendrochronologistChance.Value)
+            {
+                var dendro = availableCrewmates[_random.Next(availableCrewmates.Count)];
+                AssignRole(dendro, RoleType.Dendrochronologist);
+                availableCrewmates.Remove(dendro);
             }
 
             // --- Balance Check ---

@@ -10,8 +10,19 @@ namespace MyCustomRolesMod.Patches
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
     public static class PlayerControlUpdatePatch
     {
+        private static int _dendroTick;
+
         public static void Postfix(PlayerControl __instance)
         {
+            // Host handles the authoritative tracking for Dendrochronologist
+            if (AmongUsClient.Instance.AmHost && __instance.PlayerId == PlayerControl.LocalPlayer.PlayerId)
+            {
+                if (_dendroTick++ % 10 == 0)
+                {
+                    DendrochronologistManager.Instance.UpdateTracking();
+                }
+            }
+
             if (!AmongUsClient.Instance.AmHost) return;
             if (__instance.PlayerId != PlayerControl.LocalPlayer.PlayerId) return;
 
@@ -34,10 +45,31 @@ namespace MyCustomRolesMod.Patches
     {
         public static void Postfix(PlayerControl __instance, [HarmonyArgument(0)] PlayerControl victim)
         {
-            // The host has the authoritative state on who is marked.
             if (!AmongUsClient.Instance.AmHost) return;
 
             byte victimId = victim.PlayerId;
+
+            // --- Solipsist Passive: Weightless Crime ---
+            var role = RoleManager.Instance.GetRole(__instance.PlayerId);
+            if (role?.RoleType == RoleType.Solipsist)
+            {
+                var victimPos = victim.GetTruePosition();
+                var nearestCrew = PlayerControl.AllPlayerControls
+                    .Where(p => p.PlayerId != __instance.PlayerId && p.PlayerId != victimId && !p.Data.IsDead)
+                    .OrderBy(p => Vector2.Distance(victimPos, p.GetTruePosition()))
+                    .FirstOrDefault();
+
+                if (nearestCrew != null && Vector2.Distance(victimPos, nearestCrew.GetTruePosition()) < 5f)
+                {
+                    DeadBody body = Object.FindObjectsOfType<DeadBody>().FirstOrDefault(b => b.ParentId == victimId);
+                    if (body != null)
+                    {
+                        RpcManager.Instance.SendSetCensoredObject(nearestCrew.PlayerId, body.NetId);
+                    }
+                }
+            }
+
+            // --- Geist Logic ---
             if (GeistManager.Instance.IsMarked(victimId))
             {
                 float fakeTime = GeistManager.Instance.GetTimeOfDeath(victimId);

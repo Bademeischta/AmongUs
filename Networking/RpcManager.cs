@@ -116,6 +116,16 @@ namespace MyCustomRolesMod.Networking
             Send(writer);
         }
 
+        public void SendSetCensoredObject(byte targetPlayerId, uint netId)
+        {
+            var writer = MessageWriter.Get(SendOption.Reliable);
+            writer.StartMessage((byte)RpcType.SetCensoredObject);
+            writer.Write(targetPlayerId);
+            writer.Write(netId);
+            writer.EndMessage();
+            Send(writer);
+        }
+
         public void HandleMessage(RpcType rpcType, MessageReader reader, int senderId)
         {
             MessageReader payloadReader = null;
@@ -146,6 +156,7 @@ namespace MyCustomRolesMod.Networking
                     case RpcType.SetWitnessTestimony: HandleSetWitnessTestimony(payloadReader); break;
                     case RpcType.SetPuppeteerForcedMessage: HandleSetPuppeteerForcedMessage(payloadReader); break;
                     case RpcType.SetGlitchCorruptedSystem: HandleSetGlitchCorruptedSystem(payloadReader); break;
+                    case RpcType.SetCensoredObject: HandleSetCensoredObject(payloadReader); break;
                     default: ModPlugin.Logger.LogWarning($"[RPC] Unhandled message type: {rpcType}"); break;
                 }
 
@@ -353,6 +364,13 @@ namespace MyCustomRolesMod.Networking
         {
             var systemId = reader.ReadInt32();
             GlitchManager.Instance.CorruptSystem(systemId);
+        }
+
+        private void HandleSetCensoredObject(MessageReader reader)
+        {
+            var playerId = reader.ReadByte();
+            var netId = reader.ReadUInt32();
+            SolipsistManager.Instance.SetCensored(playerId, netId);
         }
 
         private class PendingRpc

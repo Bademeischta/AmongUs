@@ -7,6 +7,8 @@ namespace MyCustomRolesMod.Config
         public ConfigEntry<float> JesterChance { get; }
         public ConfigEntry<float> EchoChance { get; }
         public ConfigEntry<float> GeistChance { get; }
+        public ConfigEntry<float> DendrochronologistChance { get; }
+        public ConfigEntry<float> SolipsistChance { get; }
         public ConfigEntry<bool> IsDebug { get; }
         public ConfigEntry<float> RpcTimeoutSeconds { get; }
         public ConfigEntry<int> MaxRpcRetries { get; }
@@ -16,6 +18,8 @@ namespace MyCustomRolesMod.Config
             JesterChance = config.Bind("Gameplay", "JesterChance", 100f, "Probability of a Jester spawning (0-100%).");
             EchoChance = config.Bind("Gameplay", "EchoChance", 100f, "Probability of an Echo spawning (0-100%).");
             GeistChance = config.Bind("Gameplay", "GeistChance", 100f, "Probability of a Geist spawning (0-100%).");
+            DendrochronologistChance = config.Bind("Gameplay", "DendrochronologistChance", 100f, "Probability of a Dendrochronologist spawning (0-100%).");
+            SolipsistChance = config.Bind("Gameplay", "SolipsistChance", 100f, "Probability of a Solipsist spawning (0-100%).");
             IsDebug = config.Bind("Debug", "EnableDebugLogging", false, "Enables verbose logging.");
             RpcTimeoutSeconds = config.Bind("Network", "RpcTimeoutSeconds", 2.0f, "Time before a message is considered timed out.");
             MaxRpcRetries = config.Bind("Network", "MaxRpcRetries", 3, "Max number of times to resend a message.");

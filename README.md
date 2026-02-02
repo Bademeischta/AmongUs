@@ -45,6 +45,16 @@ Diese Rollen sind bereits technisch implementiert (inklusive UI und Networking),
     *   **Fähigkeit:** Kann Schiffssysteme (Aufgaben) korrumpieren.
     *   **Effekt:** Wenn ein Crewmate versucht, eine korrumpierte Aufgabe zu lösen, wird der Fortschritt **umgekehrt** (z.B. Download-Balken läuft rückwärts).
 
+*   **Dendrochronologist (Dendrochronologe) - Crewmate**
+    *   **Kernkonzept:** Analysiert die "Wachstumsringe" der Räume (Besuchshistorie).
+    *   **Fähigkeit:** Kann die letzten 4 Besucher eines Raums und deren Eintrittszeitpunkt bestimmen.
+    *   **Effekt:** Ermöglicht die Rekonstruktion von Bewegungsabläufen ohne direkte Sichtung.
+
+*   **Solipsist - Impostor**
+    *   **Kernkonzept:** Manipuliert die subjektive Wahrnehmung der Crew.
+    *   **Fähigkeit:** Kann Objekte (wie Leichen) für spezifische Spieler "zensieren" (unsichtbar machen).
+    *   **Effekt:** Erzeugt widersprüchliche Aussagen ("Da liegt eine Leiche!" - "Nein, da ist nichts!"), was die Beweiskraft von Zeugenaussagen untergräbt.
+
 ## Features
 
 - **Robustes Netzwerkprotokoll:**
