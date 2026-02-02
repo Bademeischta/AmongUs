@@ -2,6 +2,14 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [4.1.0] - 2024-08-02
+
+### Hinzugefügt (Added)
+- **Neue Rolle: Dendrochronologist (Crewmate):** Implementierung eines Raum-Tracking-Systems, das die letzten 4 Besucher pro Raum speichert. Inklusive "Extract Core" und "Sample Age" Fähigkeiten.
+- **Neue Rolle: Solipsist (Impostor):** Implementierung eines Wahrnehmungs-Manipulationssystems. Ermöglicht das "Zensieren" von Leichen für spezifische Crewmates, wodurch diese für das Opfer unsichtbar und nicht meldbar werden.
+- **Erweitertes RPC-System:** Neue Netzwerk-Pakete zur Synchronisation von zensierten Objekten und Raum-Historien.
+- **Zentralisierte Raum-Erkennung:** Ein Proxy-System zur Identifizierung von Räumen basierend auf der Nähe zu Schiffssystemen.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)

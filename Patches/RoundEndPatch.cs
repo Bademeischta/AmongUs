@@ -11,6 +11,8 @@ namespace MyCustomRolesMod.Patches
             WitnessManager.Instance.ClearAllTestimonies();
             PuppeteerManager.Instance.ClearAllForcedMessages();
             GlitchManager.Instance.ClearAllCorruptedSystems();
+            DendrochronologistManager.Instance.Clear();
+            SolipsistManager.Instance.Clear();
             GlitchPatch.ClearCorruptibleSystems();
         }
     }
