@@ -2,6 +2,11 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [4.1.0-draft] - 2024-08-01
+
+### Hinzugefügt (Added)
+- **Neue Rollenkonzepte:** Dokumentation der Konzepte für "Mnemonist" (Crewmate) und "Sophist" (Impostor) in `Core/ProposedRoles.md`. Diese Rollen nutzen innovative Mechaniken wie sequentielle Ereignis-Validierung und meta-linguistische Invisibility.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)

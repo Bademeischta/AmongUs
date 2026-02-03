@@ -45,6 +45,18 @@ Diese Rollen sind bereits technisch implementiert (inklusive UI und Networking),
     *   **Fähigkeit:** Kann Schiffssysteme (Aufgaben) korrumpieren.
     *   **Effekt:** Wenn ein Crewmate versucht, eine korrumpierte Aufgabe zu lösen, wird der Fortschritt **umgekehrt** (z.B. Download-Balken läuft rückwärts).
 
+### Geplante Konzepte (Design-Phase)
+
+Die folgenden Rollen befinden sich aktuell in der Konzeptionsphase und demonstrieren neue Ansätze für Social Deduction Mechaniken. Details finden sich in `Core/ProposedRoles.md`.
+
+*   **Mnemonist - Crewmate**
+    *   **Kern:** Verifizierung von Handlungssequenzen.
+    *   **Mechanik:** Kann Ereignis-Rhythmen in Räumen aufzeichnen und mit den Aussagen von Spielern vergleichen, um logische Widersprüche (Dissonanzen) aufzudecken.
+
+*   **Sophist - Impostor**
+    *   **Kern:** Sprach-basierte Manipulation.
+    *   **Mechanik:** Setzt "Tabu-Wörter" im Meeting-Chat fest. Spieler, die diese Wörter verwenden, verlieren im nächsten Durchgang die Fähigkeit, den Sophisten zu sehen.
+
 ## Features
 
 - **Robustes Netzwerkprotokoll:**
