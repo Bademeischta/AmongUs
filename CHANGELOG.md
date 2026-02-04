@@ -2,6 +2,13 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [4.1.0-concept] - 2024-08-01
+
+### Hinzugefügt (Added)
+- **Konzeptuelle Rollen-Designs:** Zwei neue, hochgradig innovative Rollenkonzepte wurden in `Core/ProposedRoles.md` dokumentiert.
+    - **The Tecton (Crewmate):** Ein System zur Analyse sozialer Spannung und Cluster-Stabilität.
+    - **The Noumenon (Impostor):** Ein System zur Manipulation von Wahrnehmung durch zeitlich-räumliche Echos.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)
