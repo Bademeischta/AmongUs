@@ -45,6 +45,17 @@ Diese Rollen sind bereits technisch implementiert (inklusive UI und Networking),
     *   **Fähigkeit:** Kann Schiffssysteme (Aufgaben) korrumpieren.
     *   **Effekt:** Wenn ein Crewmate versucht, eine korrumpierte Aufgabe zu lösen, wird der Fortschritt **umgekehrt** (z.B. Download-Balken läuft rückwärts).
 
+### Konzeptuelle Rollen (Design-Vorschläge)
+
+Diese Rollen sind als hochgradig innovative Konzepte in `Core/ProposedRoles.md` dokumentiert und dienen als Grundlage für zukünftige Entwicklungen.
+
+*   **The Tecton - Crewmate**
+    *   **Konzept:** Überwacht die "soziale Spannung" (Stress) von Spieler-Clustern.
+    *   **Effekt:** Sieht "Bruchlinien" zwischen Spielern. Ein Kill lässt diese Linien reißen und hinterlässt ein "Epizentrum" am Ort der höchsten sozialen Dichte.
+*   **The Noumenon - Impostor**
+    *   **Konzept:** Trennung von Wahrnehmung (Phänomen) und Realität (Noumenon).
+    *   **Effekt:** Erzeugt ein zeitlich verzögertes "Echo" eines Spielers. Kann die Realität auf die Position des Echos "kollabieren" lassen, was Teleportation und räumliche Täuschung ermöglicht.
+
 ## Features
 
 - **Robustes Netzwerkprotokoll:**
