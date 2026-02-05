@@ -2,6 +2,14 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert. Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [4.1.0] - 2024-08-02
+
+### Hinzugefügt (Added)
+- **Konzeptionelle Rollen-Designs (Design-AI):** Hinzufügen von zwei neuen, hochgradig experimentellen Rollen-Konzepten:
+    - **The Scrutineer (Crewmate):** Ein Gaze-basiertes Überwachungssystem.
+    - **The Entangler (Impostor):** Ein quantenmechanisches System zur Aktions-Verschränkung.
+- **Dokumentation:** Neue Datei `Core/ProposedRoles.md` zur detaillierten Beschreibung der KI-generierten Rollen.
+
 ## [4.0.0] - 2024-08-01
 
 ### Behoben (Fixed)

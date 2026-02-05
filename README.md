@@ -45,6 +45,13 @@ Diese Rollen sind bereits technisch implementiert (inklusive UI und Networking),
     *   **Fähigkeit:** Kann Schiffssysteme (Aufgaben) korrumpieren.
     *   **Effekt:** Wenn ein Crewmate versucht, eine korrumpierte Aufgabe zu lösen, wird der Fortschritt **umgekehrt** (z.B. Download-Balken läuft rückwärts).
 
+### Zukünftige Konzepte (Design-AI)
+
+Diese Rollen wurden von der integrierten Game-Design AI entworfen und befinden sich in der Konzeptionsphase. Details finden sich in `Core/ProposedRoles.md`.
+
+*   **The Scrutineer (Crewmate):** Nutzt die Blickrichtung (Gaze) der Spieler als physische Kraft, um Impostoren durch kollektive Beobachtung handlungsunfähig zu machen.
+*   **The Entangler (Impostor):** Erzeugt eine quantenmechanische Verschränkung zwischen Spielern, wodurch die Konsequenzen von Aktionen (wie Kills oder Venten) von einer Person auf eine andere übertragen werden.
+
 ## Features
 
 - **Robustes Netzwerkprotokoll:**
